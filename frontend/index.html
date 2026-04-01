@@ -341,6 +341,58 @@
       gap: 20px;
     }
 
+    /* Active job cards */
+    #active-jobs { display: flex; flex-direction: column; gap: 16px; width: 100%; }
+    .active-job-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .active-job-card .aj-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .active-job-card .aj-pos {
+      font-size: 12px; font-weight: 600; color: var(--txt1);
+      text-transform: capitalize; flex: 1;
+    }
+    .active-job-card .aj-id {
+      font-size: 10px; font-family: monospace; color: var(--txt3);
+    }
+    .active-job-card .aj-progress {
+      height: 2px; background: var(--border);
+    }
+    .active-job-card .aj-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      transition: width .5s;
+    }
+    .active-job-card .aj-log {
+      padding: 10px 16px;
+      font-size: 11px; color: var(--txt2);
+      min-height: 32px;
+    }
+    .active-job-card .aj-video {
+      background: #000;
+      display: none;
+    }
+    .active-job-card .aj-video video {
+      width: 100%; display: block; max-height: 360px; object-fit: contain;
+    }
+    .active-job-card .aj-actions {
+      display: flex; gap: 8px; padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .active-job-card .aj-error {
+      padding: 10px 16px;
+      font-size: 11px; color: var(--red);
+      background: rgba(244,63,94,.05);
+      display: none;
+    }
+
     /* History */
     .history-section { width: 100%; }
     .history-title {
@@ -655,36 +707,8 @@
         <p>Configure your parameters on the left,<br/>then hit Generate to create a video.</p>
       </div>
 
-      <!-- Active job panel -->
-      <div class="job-panel" id="job-panel">
-
-        <div class="job-header">
-          <span class="status-pill pill-queued" id="status-pill">Queued</span>
-          <span class="job-id-badge" id="job-id-badge">—</span>
-        </div>
-
-        <div class="progress-track">
-          <div class="progress-fill" id="progress-fill" style="width:0%"></div>
-        </div>
-
-        <!-- Activity log -->
-        <div class="log-card">
-          <div class="log-header">● Activity</div>
-          <div class="log-body" id="log-body"></div>
-        </div>
-
-        <!-- Video -->
-        <div class="video-card" id="video-card" style="display:none">
-          <video id="video-player" controls autoplay playsinline></video>
-          <div class="video-actions">
-            <a class="action-btn" id="download-btn" href="#" download>↓ Download MP4</a>
-          </div>
-        </div>
-
-        <!-- Error -->
-        <div class="error-card" id="error-card"></div>
-
-      </div>
+      <!-- Active jobs -->
+      <div id="active-jobs"></div>
 
       <!-- History -->
       <div class="history-section" id="history-section" style="display:none">
@@ -703,12 +727,9 @@
   const API_KEY  = () => $('api-key').value.trim();
   const BASE_URL = () => $('base-url').value.trim().replace(/\/$/, '');
 
-  let selectedPos  = 'cowgirl';
-  let imageBase64  = null;
-  let fileName     = '';
-  let pollTimer    = null;
-  let logs         = [];
-  let isGenerating = false;
+  let selectedPos = 'cowgirl';
+  let imageBase64 = null;
+  let fileName    = '';
 
   // ── History (localStorage) ──
   const HISTORY_KEY = 'piigu_history';
@@ -748,12 +769,17 @@
   window.expandHistory = function(i) {
     const h = history[i];
     if (!h.video_url) return;
-    showVideo(h.video_url);
-    $('download-btn').href = h.video_url;
-    $('job-id-badge').textContent = h.job_id;
-    setStatus(h.status, 100);
+    // Re-create a read-only card for this history entry
+    const card = createJobCard(h.position, h.duration);
+    card.querySelector('.aj-id').textContent = h.job_id;
+    cardStatus(card, 'completed', 100);
+    cardLog(card, 'Video ready ✓');
+    const v = card.querySelector('video');
+    v.src = h.video_url;
+    card.querySelector('.aj-dl').href = h.video_url;
+    card.querySelector('.aj-video').style.display = 'block';
+    v.ontimeupdate = () => { if (v.currentTime >= 10) { v.pause(); v.ontimeupdate = null; } };
     $('empty-state').style.display = 'none';
-    $('job-panel').style.display = 'flex';
   };
 
   renderHistory();
@@ -830,142 +856,122 @@
 
   // ── Generate ──
   $('gen-btn').addEventListener('click', async () => {
-    if (!API_KEY())     return toast('Enter your API key');
-    if (!imageBase64)   return toast('Upload an image first');
-    if (isGenerating)   return toast('A generation is already in progress');
+    if (!API_KEY())   return toast('Enter your API key');
+    if (!imageBase64) return toast('Upload an image first');
 
-    setLoading(true);
-    startNewJob();
+    const pos = selectedPos;
+    const dur = parseInt($('duration').value);
+
+    // Create a pending card immediately
+    const card = createJobCard(pos, dur);
+    $('empty-state').style.display = 'none';
 
     try {
       const res = await fetch(`${BASE_URL()}/v1/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY() },
         body: JSON.stringify({
-          image_base64:      imageBase64,
-          position:          selectedPos,
-          prompt:            $('prompt').value.trim(),
-          duration:          parseInt($('duration').value),
-          include_audio:     $('audio-toggle').checked,
+          image_base64:  imageBase64,
+          position:      pos,
+          prompt:        $('prompt').value.trim(),
+          duration:      dur,
+          include_audio: $('audio-toggle').checked,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || JSON.stringify(data));
 
-      $('job-id-badge').textContent = data.job_id;
-      addLog(`Job queued · position ${data.position_in_queue} · ~${data.estimated_wait_seconds}s wait`);
-      startPolling(data.job_id, selectedPos, parseInt($('duration').value));
+      card.querySelector('.aj-id').textContent = data.job_id;
+      cardLog(card, `Queued · #${data.position_in_queue} · ~${data.estimated_wait_seconds}s`);
+      startPolling(data.job_id, pos, dur, card);
     } catch(err) {
-      isGenerating = false;
-      setLoading(false);
-      showError(err.message);
+      cardError(card, err.message);
       toast('Error: ' + err.message);
     }
   });
 
-  // ── Output helpers ──
-  function startNewJob() {
-    if (pollTimer) clearInterval(pollTimer);
-    logs = [];
-    $('log-body').innerHTML = '';
-    $('video-card').style.display = 'none';
-    $('error-card').style.display = 'none';
-    $('progress-fill').style.width = '0%';
-    $('job-id-badge').textContent = '—';
-    setStatus('queued', 0);
-    $('empty-state').style.display = 'none';
-    $('job-panel').style.display = 'flex';
-    isGenerating = true;
-  }
-
-  function setStatus(status, progress) {
-    const pill = $('status-pill');
-    pill.textContent = status.replace('_', ' ');
-    pill.className = `status-pill pill-${status}`;
-    $('progress-fill').style.width = progress + '%';
-  }
-
-  function addLog(msg) {
-    const now = new Date();
-    const time = now.toTimeString().slice(0,8);
-    logs.push({ time, msg });
-    renderLogs();
-  }
-
-  function renderLogs() {
-    $('log-body').innerHTML = logs.map((l, i) => `
-      <div class="log-row">
-        <span class="log-time">${l.time}</span>
-        <span class="log-msg ${i === logs.length-1 ? 'active' : ''}">${l.msg}</span>
+  // ── Per-job card ──
+  function createJobCard(pos, dur) {
+    const card = document.createElement('div');
+    card.className = 'active-job-card';
+    card.innerHTML = `
+      <div class="aj-header">
+        <span class="status-pill pill-queued" style="font-size:11px">queued</span>
+        <span class="aj-pos">${pos.replace('_',' ')} · ${dur}s</span>
+        <span class="aj-id">—</span>
       </div>
-    `).join('');
-    $('log-body').scrollTop = $('log-body').scrollHeight;
+      <div class="aj-progress"><div class="aj-fill" style="width:0%"></div></div>
+      <div class="aj-log">Submitting…</div>
+      <div class="aj-video">
+        <video controls autoplay playsinline></video>
+        <div class="aj-actions">
+          <a class="action-btn aj-dl" href="#" download>↓ Download MP4</a>
+        </div>
+      </div>
+      <div class="aj-error"></div>
+    `;
+    $('active-jobs').prepend(card);
+    return card;
   }
 
-  // ── Polling ──
-  function startPolling(jobId, position, duration) {
+  function cardStatus(card, status, pct) {
+    const pill = card.querySelector('.status-pill');
+    pill.textContent = status.replace('_',' ');
+    pill.className = `status-pill pill-${status}`;
+    card.querySelector('.aj-fill').style.width = pct + '%';
+  }
+
+  function cardLog(card, msg) {
+    card.querySelector('.aj-log').textContent = msg;
+  }
+
+  function cardError(card, msg) {
+    cardStatus(card, 'failed', 0);
+    card.querySelector('.aj-error').textContent = '⚠ ' + msg;
+    card.querySelector('.aj-error').style.display = 'block';
+    card.querySelector('.aj-log').style.display = 'none';
+  }
+
+  // ── Polling (independent per job) ──
+  function startPolling(jobId, position, duration, card) {
     let lastStatus = '';
-    pollTimer = setInterval(async () => {
+    const timer = setInterval(async () => {
       try {
         const res = await fetch(`${BASE_URL()}/v1/jobs/${jobId}`, {
           headers: { 'X-API-Key': API_KEY() }
         });
         const job = await res.json();
         const pct = Math.round((job.progress || 0) * 100);
-
-        setStatus(job.status, pct);
+        cardStatus(card, job.status, pct);
 
         if (job.status !== lastStatus) {
           lastStatus = job.status;
           const msgs = {
-            processing:      `Inference running… (${pct}%)`,
-            postprocessing:  'Enhancing with GFPGAN…',
-            completed:       'Video ready ✓',
-            failed:          `Failed: ${job.error || 'unknown error'}`,
+            processing:     `Inference running… (${pct}%)`,
+            postprocessing: 'Enhancing with GFPGAN…',
+            completed:      'Video ready ✓',
+            failed:         `Failed: ${job.error || 'unknown error'}`,
           };
-          if (msgs[job.status]) addLog(msgs[job.status]);
+          if (msgs[job.status]) cardLog(card, msgs[job.status]);
         } else if (job.status === 'processing') {
-          logs[logs.length-1].msg = `Inference running… (${pct}%)`;
-          renderLogs();
+          cardLog(card, `Inference running… (${pct}%)`);
         }
 
         if (job.status === 'completed') {
-          clearInterval(pollTimer);
-          isGenerating = false;
-          setLoading(false);
-          showVideo(job.video_url);
+          clearInterval(timer);
+          const v = card.querySelector('video');
+          v.src = job.video_url;
+          card.querySelector('.aj-dl').href = job.video_url;
+          card.querySelector('.aj-video').style.display = 'block';
+          v.ontimeupdate = () => { if (v.currentTime >= 10) { v.pause(); v.ontimeupdate = null; } };
           addToHistory({ job_id: jobId, position, duration, status: 'completed', video_url: job.video_url, ts: new Date().toLocaleTimeString() });
         } else if (['failed', 'cancelled'].includes(job.status)) {
-          clearInterval(pollTimer);
-          isGenerating = false;
-          setLoading(false);
-          showError(job.error || 'Job failed unexpectedly.');
+          clearInterval(timer);
+          cardError(card, job.error || 'Job failed unexpectedly.');
           addToHistory({ job_id: jobId, position, duration, status: 'failed', video_url: null, ts: new Date().toLocaleTimeString() });
         }
       } catch(e) { console.warn('poll error', e); }
     }, 3000);
-  }
-
-  function showVideo(url) {
-    const v = $('video-player');
-    v.src = url;
-    $('download-btn').href = url;
-    $('video-card').style.display = 'block';
-    // Stop at 10s max, play once
-    v.ontimeupdate = () => { if (v.currentTime >= 10) { v.pause(); v.ontimeupdate = null; } };
-  }
-
-  function showError(msg) {
-    const el = $('error-card');
-    el.textContent = '⚠ ' + msg;
-    el.style.display = 'block';
-  }
-
-  function setLoading(on) {
-    $('gen-btn').disabled = on;
-    $('spinner').style.display = on ? 'block' : 'none';
-    $('gen-label').textContent = on ? 'Generating…' : 'Generate Video';
-    if (!on) isGenerating = false;
   }
 
   // ── Toast ──
