@@ -221,6 +221,32 @@
     }
     .pos-chip.active .chip-dot { background: var(--accent); }
 
+    /* Toggle */
+    .toggle-row {
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 12px;
+    }
+    .toggle-info { display: flex; flex-direction: column; gap: 2px; }
+    .toggle-label { font-size: 12px; font-weight: 500; color: var(--txt2); }
+    .toggle-sub   { font-size: 11px; color: var(--txt3); }
+    .toggle-switch { position: relative; flex-shrink: 0; cursor: pointer; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-track {
+      display: block; width: 36px; height: 20px;
+      background: var(--border2); border-radius: 20px;
+      transition: background .2s;
+      position: relative;
+    }
+    .toggle-track::after {
+      content: ''; position: absolute;
+      top: 3px; left: 3px;
+      width: 14px; height: 14px;
+      border-radius: 50%; background: #fff;
+      transition: transform .2s;
+    }
+    .toggle-switch input:checked + .toggle-track { background: var(--accent); }
+    .toggle-switch input:checked + .toggle-track::after { transform: translateX(16px); }
+
     /* Duration */
     .slider-row { display: flex; align-items: center; gap: 12px; }
     input[type="range"] {
@@ -537,6 +563,22 @@
             <textarea id="prompt" rows="2" placeholder="Describe the motion or scene…"></textarea>
           </div>
         </div>
+
+        <div class="field">
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <span class="toggle-label">Audio / Dirty Talk</span>
+              <span class="toggle-sub">Add vocal description to the prompt</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="audio-toggle" />
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+          <div class="input-wrap" id="audio-wrap" style="margin-top:8px;display:none">
+            <textarea id="audio-prompt" rows="2" placeholder="moaning, dirty talk, breathless…"></textarea>
+          </div>
+        </div>
         <div class="field">
           <label>Duration</label>
           <div class="slider-row">
@@ -657,6 +699,11 @@
     });
   });
 
+  // ── Audio toggle ──
+  $('audio-toggle').addEventListener('change', () => {
+    $('audio-wrap').style.display = $('audio-toggle').checked ? 'block' : 'none';
+  });
+
   // ── Duration ──
   $('duration').addEventListener('input', () => {
     $('duration-val').textContent = $('duration').value + 's';
@@ -706,10 +753,12 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY() },
         body: JSON.stringify({
-          image_base64: imageBase64,
-          position:     selectedPos,
-          prompt:       $('prompt').value.trim(),
-          duration:     parseInt($('duration').value),
+          image_base64:      imageBase64,
+          position:          selectedPos,
+          prompt:            $('prompt').value.trim(),
+          duration:          parseInt($('duration').value),
+          ...($('audio-toggle').checked && $('audio-prompt').value.trim()
+            ? { audio_description: $('audio-prompt').value.trim() } : {}),
         }),
       });
       const data = await res.json();
