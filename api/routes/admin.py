@@ -4,9 +4,15 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from api.auth import get_redis
+from api.auth import create_api_key, get_redis
 
 router = APIRouter(prefix="/v1/admin")
+
+
+@router.post("/keys")
+async def create_key(name: str):
+    key = await create_api_key(name)
+    return {"name": name, "api_key": key}
 
 
 @router.get("/billing")
