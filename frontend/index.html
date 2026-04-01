@@ -747,7 +747,7 @@
     if (!history.length) { $('history-section').style.display = 'none'; return; }
     $('history-section').style.display = 'block';
     $('history-list').innerHTML = history.map((h, i) => `
-      <div class="history-card" onclick="expandHistory(${i})">
+      <div class="history-card" id="hcard-${i}" onclick="expandHistory(${i})">
         <div class="history-thumb">
           ${h.video_url
             ? `<video src="${h.video_url}" muted playsinline preload="metadata"></video>`
@@ -762,6 +762,9 @@
           ${h.video_url ? `<a class="history-btn" href="${h.video_url}" download onclick="event.stopPropagation()">↓</a>` : ''}
           <span class="status-pill pill-${h.status}" style="font-size:10px;padding:3px 8px">${h.status}</span>
         </div>
+        ${h.video_url ? `<div class="history-player" id="hplayer-${i}" style="display:none;background:#000;border-top:1px solid var(--border)">
+          <video controls autoplay playsinline style="width:100%;max-height:300px;display:block;object-fit:contain"></video>
+        </div>` : ''}
       </div>
     `).join('');
   }
@@ -769,17 +772,17 @@
   window.expandHistory = function(i) {
     const h = history[i];
     if (!h.video_url) return;
-    // Re-create a read-only card for this history entry
-    const card = createJobCard(h.position, h.duration);
-    card.querySelector('.aj-id').textContent = h.job_id;
-    cardStatus(card, 'completed', 100);
-    cardLog(card, 'Video ready ✓');
-    const v = card.querySelector('video');
+    const player = document.getElementById(`hplayer-${i}`);
+    if (!player) return;
+    const isOpen = player.style.display !== 'none';
+    // close all others
+    document.querySelectorAll('.history-player').forEach(p => { p.style.display = 'none'; p.querySelector('video').pause(); });
+    if (isOpen) return;
+    player.style.display = 'block';
+    const v = player.querySelector('video');
     v.src = h.video_url;
-    card.querySelector('.aj-dl').href = h.video_url;
-    card.querySelector('.aj-video').style.display = 'block';
+    v.play();
     v.ontimeupdate = () => { if (v.currentTime >= 10) { v.pause(); v.ontimeupdate = null; } };
-    $('empty-state').style.display = 'none';
   };
 
   renderHistory();
