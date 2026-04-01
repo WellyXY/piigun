@@ -3,7 +3,7 @@ from pathlib import Path
 
 
 class Settings:
-    PROJECT_NAME: str = "Parrot Video API"
+    PROJECT_NAME: str = "Piigu Video API"
     API_VERSION: str = "v1"
 
     # ── Redis (Railway plugin / RunPod public URL) ──
@@ -16,12 +16,12 @@ class Settings:
     R2_ACCOUNT_ID: str = os.getenv("R2_ACCOUNT_ID", "")
     R2_ACCESS_KEY_ID: str = os.getenv("R2_ACCESS_KEY_ID", "")
     R2_SECRET_ACCESS_KEY: str = os.getenv("R2_SECRET_ACCESS_KEY", "")
-    R2_BUCKET_NAME: str = os.getenv("R2_BUCKET_NAME", "parrot-videos")
+    R2_BUCKET_NAME: str = os.getenv("R2_BUCKET_NAME", "piigu-videos")
     R2_PUBLIC_URL: str = os.getenv("R2_PUBLIC_URL", "")  # https://pub-xxx.r2.dev
 
     # ── API ──
     VIDEO_BASE_URL: str = os.getenv("VIDEO_BASE_URL", "http://localhost:8000/v1/jobs")
-    WEBHOOK_SECRET: str = os.getenv("WEBHOOK_SECRET", "parrot-webhook-secret")
+    WEBHOOK_SECRET: str = os.getenv("WEBHOOK_SECRET", "piigu-webhook-secret")
     NUM_GPUS: int = int(os.getenv("NUM_GPUS", "1"))
 
     # ── RunPod model paths (used only by worker) ──

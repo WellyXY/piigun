@@ -30,8 +30,8 @@ async def send_webhook(
     sig = _sign_payload(payload, settings.WEBHOOK_SECRET)
     headers = {
         "Content-Type": "application/json",
-        "X-Parrot-Signature": sig,
-        "X-Parrot-Timestamp": str(int(time.time())),
+        "X-Piigu-Signature": sig,
+        "X-Piigu-Timestamp": str(int(time.time())),
     }
 
     for attempt in range(retries):
