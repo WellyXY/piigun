@@ -3,497 +3,849 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Parrot API — Test</title>
+  <title>Parrot Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:       #07090f;
+      --surface:  #0d1117;
+      --panel:    #111827;
+      --border:   #1e2738;
+      --border2:  #263248;
+      --accent:   #6366f1;
+      --accent2:  #818cf8;
+      --glow:     rgba(99,102,241,.18);
+      --green:    #10b981;
+      --red:      #f43f5e;
+      --amber:    #f59e0b;
+      --sky:      #38bdf8;
+      --txt1:     #f1f5f9;
+      --txt2:     #94a3b8;
+      --txt3:     #475569;
+      --radius:   12px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background: #0f0f0f;
-      color: #e0e0e0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--txt1);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
       min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* ── Top bar ── */
+    .topbar {
+      height: 56px;
+      border-bottom: 1px solid var(--border);
       display: flex;
-      justify-content: center;
-      padding: 40px 16px;
+      align-items: center;
+      padding: 0 24px;
+      gap: 12px;
+      background: rgba(13,17,23,.9);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: -.3px;
+    }
+    .logo-icon {
+      width: 28px; height: 28px;
+      background: linear-gradient(135deg, var(--accent), #a78bfa);
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+    .logo-sub { color: var(--txt3); font-weight: 400; font-size: 13px; }
+    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green);
+           box-shadow: 0 0 6px var(--green); }
+    .status-text { font-size: 12px; color: var(--txt2); }
+
+    /* ── Layout ── */
+    .workspace {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      height: calc(100vh - 56px);
     }
 
-    .container {
-      width: 100%;
-      max-width: 560px;
-    }
-
-    h1 {
-      font-size: 1.4rem;
-      font-weight: 600;
-      color: #fff;
-      margin-bottom: 32px;
-      letter-spacing: -0.3px;
-    }
-    h1 span { color: #7c6af7; }
-
-    .card {
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
-      border-radius: 12px;
+    /* ── Left panel ── */
+    .sidebar {
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
       padding: 24px;
-      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      background: var(--surface);
     }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-track { background: transparent; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
 
-    label {
-      display: block;
-      font-size: 0.8rem;
-      font-weight: 500;
-      color: #888;
+    .section-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--txt3);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 8px;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
     }
 
-    input[type="text"], input[type="password"], select, textarea {
+    /* Input */
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 12px; font-weight: 500; color: var(--txt2); }
+    .input-wrap { position: relative; }
+    .input-wrap input, .input-wrap textarea {
       width: 100%;
-      background: #111;
-      border: 1px solid #333;
+      background: var(--panel);
+      border: 1px solid var(--border);
       border-radius: 8px;
-      color: #e0e0e0;
-      font-size: 0.95rem;
-      padding: 10px 14px;
+      color: var(--txt1);
+      font-size: 13px;
+      font-family: inherit;
+      padding: 9px 12px;
       outline: none;
-      transition: border-color 0.2s;
+      transition: border-color .15s, box-shadow .15s;
     }
-    input:focus, select:focus, textarea:focus { border-color: #7c6af7; }
-    select option { background: #1a1a1a; }
-
-    .field { margin-bottom: 18px; }
+    .input-wrap input:focus, .input-wrap textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--glow);
+    }
+    .input-wrap textarea { resize: none; }
+    .key-toggle {
+      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: var(--txt3); cursor: pointer;
+      font-size: 13px; padding: 2px;
+      transition: color .15s;
+    }
+    .key-toggle:hover { color: var(--txt2); }
 
     /* Upload zone */
     .upload-zone {
-      border: 2px dashed #333;
-      border-radius: 10px;
-      padding: 32px;
+      border: 1.5px dashed var(--border2);
+      border-radius: var(--radius);
+      padding: 28px 20px;
       text-align: center;
       cursor: pointer;
-      transition: border-color 0.2s, background 0.2s;
       position: relative;
+      transition: border-color .2s, background .2s;
+      background: var(--panel);
     }
     .upload-zone:hover, .upload-zone.dragover {
-      border-color: #7c6af7;
-      background: rgba(124, 106, 247, 0.05);
+      border-color: var(--accent);
+      background: var(--glow);
     }
     .upload-zone input[type="file"] {
       position: absolute; inset: 0; opacity: 0; cursor: pointer;
       width: 100%; height: 100%;
     }
-    .upload-zone .icon { font-size: 2rem; margin-bottom: 8px; }
-    .upload-zone .hint { font-size: 0.85rem; color: #666; }
-    .upload-zone .filename { font-size: 0.9rem; color: #7c6af7; margin-top: 8px; }
+    .upload-icon {
+      width: 40px; height: 40px;
+      border: 1.5px solid var(--border2);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 10px;
+      font-size: 18px;
+      background: var(--surface);
+    }
+    .upload-hint { font-size: 12px; color: var(--txt3); line-height: 1.6; }
+    .upload-hint strong { color: var(--txt2); }
 
-    #preview-wrap {
-      margin-top: 12px;
+    .preview-strip {
       display: none;
       position: relative;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
     }
-    #preview-wrap img {
-      width: 100%;
-      border-radius: 8px;
-      max-height: 300px;
-      object-fit: cover;
+    .preview-strip img {
+      width: 100%; display: block;
+      max-height: 180px; object-fit: cover;
     }
-    #clear-img {
-      position: absolute; top: 8px; right: 8px;
-      background: rgba(0,0,0,0.7); border: none;
-      color: #fff; border-radius: 50%; width: 28px; height: 28px;
-      cursor: pointer; font-size: 1rem; display: flex;
-      align-items: center; justify-content: center;
+    .preview-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,.7) 0%, transparent 50%);
+      display: flex; align-items: flex-end; padding: 10px 12px;
+      justify-content: space-between;
     }
+    .preview-name { font-size: 11px; color: #fff; opacity: .8; }
+    .clear-btn {
+      background: rgba(255,255,255,.12);
+      border: none; border-radius: 6px;
+      color: #fff; font-size: 11px;
+      padding: 3px 8px; cursor: pointer;
+      transition: background .15s;
+    }
+    .clear-btn:hover { background: rgba(255,255,255,.22); }
 
-    /* Position grid */
+    /* Position chips */
     .position-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
     }
-    .pos-btn {
-      background: #111;
-      border: 1px solid #333;
+    .pos-chip {
+      background: var(--panel);
+      border: 1px solid var(--border);
       border-radius: 8px;
-      color: #aaa;
-      font-size: 0.75rem;
-      padding: 8px 4px;
+      color: var(--txt2);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 8px 10px;
       cursor: pointer;
-      text-align: center;
-      transition: all 0.15s;
-      line-height: 1.3;
+      text-align: left;
+      transition: all .15s;
+      display: flex; align-items: center; gap: 6px;
     }
-    .pos-btn:hover { border-color: #7c6af7; color: #fff; }
-    .pos-btn.active {
-      background: rgba(124,106,247,0.15);
-      border-color: #7c6af7;
-      color: #fff;
+    .pos-chip .chip-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--border2); flex-shrink: 0;
+      transition: background .15s;
     }
+    .pos-chip:hover { border-color: var(--accent2); color: var(--txt1); }
+    .pos-chip.active {
+      background: var(--glow);
+      border-color: var(--accent);
+      color: var(--txt1);
+    }
+    .pos-chip.active .chip-dot { background: var(--accent); }
 
     /* Duration */
-    .duration-row {
+    .slider-row { display: flex; align-items: center; gap: 12px; }
+    input[type="range"] {
+      flex: 1; accent-color: var(--accent);
+      background: transparent; cursor: pointer;
+    }
+    .slider-val {
+      font-size: 13px; font-weight: 600;
+      color: var(--accent2); min-width: 28px; text-align: right;
+    }
+
+    /* Divider */
+    .divider { height: 1px; background: var(--border); }
+
+    /* Generate button */
+    .gen-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border: none; border-radius: var(--radius);
+      color: #fff; font-size: 14px; font-weight: 600;
+      font-family: inherit;
+      padding: 13px;
+      cursor: pointer;
+      transition: opacity .2s, transform .1s;
+      box-shadow: 0 4px 20px rgba(99,102,241,.3);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .gen-btn:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
+    .gen-btn:active:not(:disabled) { transform: translateY(0); }
+    .gen-btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
+    /* Spinner */
+    .spinner {
+      width: 15px; height: 15px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Main / Output ── */
+    .main {
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .output-header {
+      padding: 20px 28px 0;
       display: flex;
       align-items: center;
       gap: 12px;
     }
-    input[type="range"] {
+    .output-title {
+      font-size: 13px; font-weight: 600; color: var(--txt2);
+    }
+
+    .output-body {
       flex: 1;
-      accent-color: #7c6af7;
-    }
-    .duration-val {
-      min-width: 36px;
-      text-align: right;
-      font-weight: 600;
-      color: #7c6af7;
-    }
-
-    /* Submit */
-    #submit-btn {
-      width: 100%;
-      background: #7c6af7;
-      border: none;
-      border-radius: 10px;
-      color: #fff;
-      font-size: 1rem;
-      font-weight: 600;
-      padding: 14px;
-      cursor: pointer;
-      transition: background 0.2s, opacity 0.2s;
-    }
-    #submit-btn:hover:not(:disabled) { background: #6a59e0; }
-    #submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    /* Status */
-    #status-card { display: none; }
-
-    .status-row {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
-    }
-    .status-badge {
-      font-size: 0.8rem;
-      font-weight: 600;
-      padding: 4px 10px;
-      border-radius: 20px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .badge-queued     { background: #2a2a00; color: #f0c040; }
-    .badge-processing { background: #001a2a; color: #40a0f0; }
-    .badge-postprocessing { background: #001a2a; color: #40d0f0; }
-    .badge-completed  { background: #002a10; color: #40d080; }
-    .badge-failed     { background: #2a0000; color: #f06060; }
-
-    .progress-bar-wrap {
-      background: #222;
-      border-radius: 4px;
-      height: 6px;
-      margin-bottom: 12px;
+      justify-content: center;
+      padding: 24px 28px;
       overflow: hidden;
     }
-    .progress-bar {
-      background: #7c6af7;
-      height: 100%;
-      border-radius: 4px;
-      transition: width 0.4s ease;
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      max-width: 320px;
+    }
+    .empty-glyph {
+      width: 72px; height: 72px;
+      border: 1.5px solid var(--border2);
+      border-radius: 18px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 30px;
+      background: var(--surface);
+    }
+    .empty-state h2 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+    .empty-state p { font-size: 13px; color: var(--txt3); line-height: 1.6; }
+
+    /* Job status panel */
+    .job-panel {
+      width: 100%; max-width: 600px;
+      display: none;
+      flex-direction: column;
+      gap: 20px;
     }
 
-    .job-id {
-      font-size: 0.75rem;
-      color: #555;
-      font-family: monospace;
+    .job-header {
+      display: flex; align-items: center; gap: 12px;
     }
+    .job-id-badge {
+      font-size: 11px; font-family: 'SF Mono', 'Fira Code', monospace;
+      color: var(--txt3);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 3px 8px;
+    }
+
+    /* Status pill */
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 11px; font-weight: 600;
+      padding: 4px 10px; border-radius: 20px;
+      text-transform: uppercase; letter-spacing: .5px;
+    }
+    .status-pill::before {
+      content: ''; width: 6px; height: 6px;
+      border-radius: 50%; flex-shrink: 0;
+    }
+    .pill-queued     { background: rgba(245,158,11,.1); color: var(--amber); }
+    .pill-queued::before { background: var(--amber); box-shadow: 0 0 5px var(--amber); }
+    .pill-processing { background: rgba(56,189,248,.1); color: var(--sky); }
+    .pill-processing::before { background: var(--sky); box-shadow: 0 0 5px var(--sky); animation: pulse 1s infinite; }
+    .pill-postprocessing { background: rgba(56,189,248,.1); color: var(--sky); }
+    .pill-postprocessing::before { background: var(--sky); animation: pulse 1s infinite; }
+    .pill-completed  { background: rgba(16,185,129,.1); color: var(--green); }
+    .pill-completed::before { background: var(--green); box-shadow: 0 0 5px var(--green); }
+    .pill-failed     { background: rgba(244,63,94,.1); color: var(--red); }
+    .pill-failed::before { background: var(--red); }
+
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50% { opacity: .4; }
+    }
+
+    /* Progress */
+    .progress-track {
+      height: 3px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; border-radius: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      transition: width .5s cubic-bezier(.4,0,.2,1);
+      box-shadow: 0 0 8px var(--glow);
+    }
+
+    /* Log */
+    .log-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .log-header {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 8px;
+      font-size: 11px; color: var(--txt3);
+    }
+    .log-body {
+      padding: 14px 16px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .log-row {
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .log-time { font-size: 11px; color: var(--txt3); font-family: monospace; min-width: 55px; }
+    .log-msg  { font-size: 12px; color: var(--txt2); }
+    .log-msg.active { color: var(--txt1); }
 
     /* Video */
-    #video-wrap { display: none; margin-top: 16px; }
-    #video-wrap video {
-      width: 100%;
-      border-radius: 10px;
+    .video-card {
       background: #000;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,.6);
     }
-    #download-btn {
-      display: block;
-      margin-top: 10px;
+    .video-card video {
+      width: 100%; display: block;
+      max-height: 400px; object-fit: contain;
+    }
+    .video-actions {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      display: flex; gap: 8px;
+      background: var(--panel);
+    }
+    .action-btn {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--txt2);
+      font-size: 12px; font-weight: 500;
+      font-family: inherit;
+      padding: 8px;
+      cursor: pointer;
       text-align: center;
-      background: #222;
-      border: 1px solid #333;
-      border-radius: 8px;
-      color: #aaa;
-      font-size: 0.85rem;
-      padding: 10px;
       text-decoration: none;
-      transition: border-color 0.2s, color 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      transition: border-color .15s, color .15s;
     }
-    #download-btn:hover { border-color: #7c6af7; color: #fff; }
+    .action-btn:hover { border-color: var(--accent2); color: var(--txt1); }
 
-    .error-msg {
-      background: #1a0000;
-      border: 1px solid #5a0000;
-      border-radius: 8px;
-      color: #f06060;
-      font-size: 0.85rem;
-      padding: 10px 14px;
-      margin-top: 12px;
+    .error-card {
+      background: rgba(244,63,94,.05);
+      border: 1px solid rgba(244,63,94,.2);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      font-size: 12px; color: var(--red);
       display: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .workspace { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+      .sidebar { height: auto; max-height: 55vh; }
+      .main { min-height: 45vh; }
     }
   </style>
 </head>
 <body>
-<div class="container">
-  <h1>Parrot API <span>Test</span></h1>
 
-  <!-- Config -->
-  <div class="card">
-    <div class="field">
-      <label>API Key</label>
-      <input type="password" id="api-key" placeholder="pk_..." />
-    </div>
-    <div class="field" style="margin-bottom:0">
-      <label>API Base URL</label>
-      <input type="text" id="base-url" value="https://www.racoonn.me" />
-    </div>
+<!-- Top bar -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-icon">🦜</div>
+    Parrot
+    <span class="logo-sub">/ Studio</span>
   </div>
-
-  <!-- Image -->
-  <div class="card">
-    <label>Input Image</label>
-    <div class="upload-zone" id="upload-zone">
-      <input type="file" id="file-input" accept="image/*" />
-      <div class="icon">🖼️</div>
-      <div class="hint">Click or drag an image here</div>
-      <div class="filename" id="filename"></div>
-    </div>
-    <div id="preview-wrap">
-      <img id="preview-img" src="" alt="preview" />
-      <button id="clear-img">✕</button>
-    </div>
-  </div>
-
-  <!-- Position -->
-  <div class="card">
-    <div class="field">
-      <label>Position</label>
-      <div class="position-grid" id="position-grid">
-        <button class="pos-btn active" data-value="blow_job">Blow Job</button>
-        <button class="pos-btn" data-value="cowgirl">Cowgirl</button>
-        <button class="pos-btn" data-value="doggy">Doggy</button>
-        <button class="pos-btn" data-value="handjob">Handjob</button>
-        <button class="pos-btn" data-value="lift_clothes">Lift Clothes</button>
-        <button class="pos-btn" data-value="masturbation">Masturbation</button>
-        <button class="pos-btn" data-value="missionary">Missionary</button>
-        <button class="pos-btn" data-value="reverse_cowgirl">Reverse Cowgirl</button>
-      </div>
-    </div>
-
-    <div class="field">
-      <label>Prompt (optional)</label>
-      <textarea id="prompt" rows="2" placeholder="Describe the scene..."></textarea>
-    </div>
-
-    <div class="field" style="margin-bottom:0">
-      <label>Duration</label>
-      <div class="duration-row">
-        <input type="range" id="duration" min="5" max="10" value="10" step="1" />
-        <span class="duration-val" id="duration-val">10s</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Submit -->
-  <button id="submit-btn">Generate Video</button>
-
-  <!-- Status -->
-  <div class="card" id="status-card" style="margin-top:20px">
-    <div class="status-row">
-      <span id="status-badge" class="status-badge badge-queued">Queued</span>
-      <span class="job-id" id="job-id-label"></span>
-    </div>
-    <div class="progress-bar-wrap">
-      <div class="progress-bar" id="progress-bar" style="width:0%"></div>
-    </div>
-    <div style="font-size:0.85rem; color:#666" id="status-detail">Waiting in queue...</div>
-    <div class="error-msg" id="error-msg"></div>
-
-    <div id="video-wrap">
-      <video id="video-player" controls autoplay loop></video>
-      <a id="download-btn" href="#" download>⬇ Download Video</a>
-    </div>
+  <div class="topbar-right">
+    <div class="dot" id="conn-dot" style="background:var(--txt3);box-shadow:none"></div>
+    <span class="status-text" id="conn-text">Checking…</span>
   </div>
 </div>
 
+<div class="workspace">
+
+  <!-- ── Left sidebar ── -->
+  <div class="sidebar">
+
+    <!-- Auth -->
+    <div>
+      <div class="section-label">Authentication</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="field">
+          <label>API Key</label>
+          <div class="input-wrap">
+            <input type="password" id="api-key"
+              value="pk_wc2jg0eMWPHOy86CvA5LlxVhv1N16ZtxQs6RxJoZcwY"
+              placeholder="pk_…" />
+            <button class="key-toggle" id="key-toggle" title="Toggle visibility">👁</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Base URL</label>
+          <div class="input-wrap">
+            <input type="text" id="base-url" value="https://www.racoonn.me" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Image -->
+    <div>
+      <div class="section-label">Input Image</div>
+      <div class="upload-zone" id="upload-zone">
+        <input type="file" id="file-input" accept="image/*" />
+        <div class="upload-icon">📎</div>
+        <div class="upload-hint">
+          <strong>Click to upload</strong> or drag & drop<br/>
+          PNG, JPG, WEBP
+        </div>
+      </div>
+      <div class="preview-strip" id="preview-strip" style="margin-top:10px">
+        <img id="preview-img" src="" alt="preview" />
+        <div class="preview-overlay">
+          <span class="preview-name" id="preview-name"></span>
+          <button class="clear-btn" id="clear-btn">Remove</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Position -->
+    <div>
+      <div class="section-label">Position</div>
+      <div class="position-grid" id="position-grid">
+        <button class="pos-chip" data-value="blow_job"><span class="chip-dot"></span>Blow Job</button>
+        <button class="pos-chip active" data-value="cowgirl"><span class="chip-dot"></span>Cowgirl</button>
+        <button class="pos-chip" data-value="doggy"><span class="chip-dot"></span>Doggy Style</button>
+        <button class="pos-chip" data-value="handjob"><span class="chip-dot"></span>Handjob</button>
+        <button class="pos-chip" data-value="lift_clothes"><span class="chip-dot"></span>Lift Clothes</button>
+        <button class="pos-chip" data-value="masturbation"><span class="chip-dot"></span>Masturbation</button>
+        <button class="pos-chip" data-value="missionary"><span class="chip-dot"></span>Missionary</button>
+        <button class="pos-chip" data-value="reverse_cowgirl"><span class="chip-dot"></span>Rev. Cowgirl</button>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Params -->
+    <div>
+      <div class="section-label">Parameters</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="field">
+          <label>Prompt <span style="color:var(--txt3)">(optional)</span></label>
+          <div class="input-wrap">
+            <textarea id="prompt" rows="2" placeholder="Describe the motion or scene…"></textarea>
+          </div>
+        </div>
+        <div class="field">
+          <label>Duration</label>
+          <div class="slider-row">
+            <input type="range" id="duration" min="5" max="10" value="10" step="1" />
+            <span class="slider-val" id="duration-val">10s</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Submit -->
+    <button class="gen-btn" id="gen-btn">
+      <div class="spinner" id="spinner"></div>
+      <span id="gen-label">Generate Video</span>
+    </button>
+
+  </div>
+
+  <!-- ── Main output ── -->
+  <div class="main">
+    <div class="output-header">
+      <span class="output-title">Output</span>
+    </div>
+
+    <div class="output-body">
+
+      <!-- Empty state -->
+      <div class="empty-state" id="empty-state">
+        <div class="empty-glyph">🎬</div>
+        <h2>No video yet</h2>
+        <p>Configure your parameters on the left,<br/>then hit Generate to create a video.</p>
+      </div>
+
+      <!-- Job panel -->
+      <div class="job-panel" id="job-panel">
+
+        <div class="job-header">
+          <span class="status-pill pill-queued" id="status-pill">Queued</span>
+          <span class="job-id-badge" id="job-id-badge">—</span>
+        </div>
+
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+
+        <!-- Activity log -->
+        <div class="log-card">
+          <div class="log-header">
+            ● Activity
+          </div>
+          <div class="log-body" id="log-body"></div>
+        </div>
+
+        <!-- Video -->
+        <div class="video-card" id="video-card" style="display:none">
+          <video id="video-player" controls autoplay loop playsinline></video>
+          <div class="video-actions">
+            <a class="action-btn" id="download-btn" href="#" download>
+              ↓ Download MP4
+            </a>
+            <button class="action-btn" id="new-btn">
+              ↺ New Generation
+            </button>
+          </div>
+        </div>
+
+        <!-- Error -->
+        <div class="error-card" id="error-card"></div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
 <script>
-  const API_KEY   = () => document.getElementById('api-key').value.trim();
-  const BASE_URL  = () => document.getElementById('base-url').value.trim().replace(/\/$/, '');
+  const $ = id => document.getElementById(id);
 
-  let selectedPosition = 'blow_job';
+  const API_KEY  = () => $('api-key').value.trim();
+  const BASE_URL = () => $('base-url').value.trim().replace(/\/$/, '');
+
+  let selectedPos = 'cowgirl';
   let imageBase64 = null;
-  let pollTimer = null;
+  let fileName    = '';
+  let pollTimer   = null;
+  let logs        = [];
 
-  // Position select
-  document.querySelectorAll('.pos-btn').forEach(btn => {
+  // ── Connection check ──
+  async function checkConnection() {
+    try {
+      const r = await fetch(`${BASE_URL()}/health`);
+      if (r.ok) {
+        $('conn-dot').style.cssText = 'width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)';
+        $('conn-text').textContent = 'Connected';
+      } else throw new Error();
+    } catch {
+      $('conn-dot').style.cssText = 'width:7px;height:7px;border-radius:50%;background:var(--red)';
+      $('conn-text').textContent = 'Offline';
+    }
+  }
+  checkConnection();
+  setInterval(checkConnection, 30000);
+
+  // ── API key toggle ──
+  $('key-toggle').addEventListener('click', () => {
+    const inp = $('api-key');
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+  });
+
+  // ── Position chips ──
+  document.querySelectorAll('.pos-chip').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.pos-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.pos-chip').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      selectedPosition = btn.dataset.value;
+      selectedPos = btn.dataset.value;
     });
   });
 
-  // Duration slider
-  const durSlider = document.getElementById('duration');
-  const durVal    = document.getElementById('duration-val');
-  durSlider.addEventListener('input', () => durVal.textContent = durSlider.value + 's');
+  // ── Duration ──
+  $('duration').addEventListener('input', () => {
+    $('duration-val').textContent = $('duration').value + 's';
+  });
 
-  // File upload / drag-drop
-  const zone = document.getElementById('upload-zone');
-  const fileInput = document.getElementById('file-input');
-  const previewWrap = document.getElementById('preview-wrap');
-  const previewImg  = document.getElementById('preview-img');
-
+  // ── Upload ──
+  const zone = $('upload-zone');
   zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('dragover'); });
-  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('dragleave', ()=> zone.classList.remove('dragover'));
   zone.addEventListener('drop', e => {
-    e.preventDefault();
-    zone.classList.remove('dragover');
+    e.preventDefault(); zone.classList.remove('dragover');
     if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
   });
-  fileInput.addEventListener('change', () => { if (fileInput.files[0]) loadFile(fileInput.files[0]); });
+  $('file-input').addEventListener('change', e => {
+    if (e.target.files[0]) loadFile(e.target.files[0]);
+  });
 
   function loadFile(file) {
-    document.getElementById('filename').textContent = file.name;
+    fileName = file.name;
     const reader = new FileReader();
     reader.onload = e => {
       imageBase64 = e.target.result.split(',')[1];
-      previewImg.src = e.target.result;
-      previewWrap.style.display = 'block';
+      $('preview-img').src = e.target.result;
+      $('preview-name').textContent = file.name;
+      $('preview-strip').style.display = 'block';
     };
     reader.readAsDataURL(file);
   }
 
-  document.getElementById('clear-img').addEventListener('click', () => {
-    imageBase64 = null;
-    previewWrap.style.display = 'none';
-    previewImg.src = '';
-    fileInput.value = '';
-    document.getElementById('filename').textContent = '';
+  $('clear-btn').addEventListener('click', () => {
+    imageBase64 = null; fileName = '';
+    $('preview-strip').style.display = 'none';
+    $('preview-img').src = '';
+    $('file-input').value = '';
   });
 
-  // Submit
-  document.getElementById('submit-btn').addEventListener('click', async () => {
-    if (!API_KEY()) return alert('Enter your API key.');
-    if (!imageBase64) return alert('Upload an image first.');
+  // ── Generate ──
+  $('gen-btn').addEventListener('click', async () => {
+    if (!API_KEY())     return toast('Enter your API key');
+    if (!imageBase64)   return toast('Upload an image first');
 
-    setSubmitting(true);
-    clearStatus();
+    setLoading(true);
+    resetOutput();
 
     try {
-      const resp = await fetch(`${BASE_URL()}/v1/generate`, {
+      const res = await fetch(`${BASE_URL()}/v1/generate`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': API_KEY(),
-        },
+        headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY() },
         body: JSON.stringify({
           image_base64: imageBase64,
-          position: selectedPosition,
-          prompt: document.getElementById('prompt').value.trim(),
-          duration: parseInt(durSlider.value),
+          position:     selectedPos,
+          prompt:       $('prompt').value.trim(),
+          duration:     parseInt($('duration').value),
         }),
       });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || JSON.stringify(data));
 
-      const data = await resp.json();
-      if (!resp.ok) throw new Error(data.detail || JSON.stringify(data));
-
-      showStatusCard(data.job_id, data.position_in_queue, data.estimated_wait_seconds);
+      showJobPanel(data);
       startPolling(data.job_id);
-
-    } catch (err) {
-      setSubmitting(false);
-      alert('Error: ' + err.message);
+    } catch(err) {
+      setLoading(false);
+      toast('Error: ' + err.message);
     }
   });
 
-  function showStatusCard(jobId, queuePos, waitSec) {
-    document.getElementById('status-card').style.display = 'block';
-    document.getElementById('job-id-label').textContent = jobId;
-    setStatus('queued', 0, `Position in queue: ${queuePos} · Est. wait: ${waitSec}s`);
+  $('new-btn').addEventListener('click', () => {
+    resetOutput();
+    $('job-panel').style.display = 'none';
+    $('empty-state').style.display = 'block';
+    setLoading(false);
+  });
+
+  // ── Output helpers ──
+  function showJobPanel(data) {
+    $('empty-state').style.display = 'none';
+    $('job-panel').style.display = 'flex';
+    $('job-id-badge').textContent = data.job_id;
+    setStatus('queued', 0);
+    addLog(`Job queued · position ${data.position_in_queue} · ~${data.estimated_wait_seconds}s wait`);
   }
 
-  function startPolling(jobId) {
+  function setStatus(status, progress) {
+    const pill = $('status-pill');
+    pill.textContent = status.replace('_', ' ');
+    pill.className = `status-pill pill-${status}`;
+    $('progress-fill').style.width = progress + '%';
+  }
+
+  function addLog(msg) {
+    const now = new Date();
+    const time = now.toTimeString().slice(0,8);
+    logs.push({ time, msg });
+    renderLogs();
+  }
+
+  function renderLogs() {
+    $('log-body').innerHTML = logs.map((l, i) => `
+      <div class="log-row">
+        <span class="log-time">${l.time}</span>
+        <span class="log-msg ${i === logs.length-1 ? 'active' : ''}">${l.msg}</span>
+      </div>
+    `).join('');
+    $('log-body').scrollTop = $('log-body').scrollHeight;
+  }
+
+  function resetOutput() {
+    logs = [];
+    $('log-body').innerHTML = '';
+    $('video-card').style.display = 'none';
+    $('error-card').style.display = 'none';
+    $('progress-fill').style.width = '0%';
     if (pollTimer) clearInterval(pollTimer);
-    pollTimer = setInterval(() => pollJob(jobId), 3000);
   }
 
-  async function pollJob(jobId) {
+  // ── Polling ──
+  function startPolling(jobId) {
+    pollTimer = setInterval(() => poll(jobId), 3000);
+  }
+
+  let lastStatus = '';
+  async function poll(jobId) {
     try {
-      const resp = await fetch(`${BASE_URL()}/v1/jobs/${jobId}`, {
+      const res = await fetch(`${BASE_URL()}/v1/jobs/${jobId}`, {
         headers: { 'X-API-Key': API_KEY() }
       });
-      const job = await resp.json();
+      const job = await res.json();
+      const pct = Math.round((job.progress || 0) * 100);
 
-      const progress = Math.round((job.progress || 0) * 100);
-      const detail = statusDetail(job);
-      setStatus(job.status, progress, detail);
+      setStatus(job.status, pct);
+
+      if (job.status !== lastStatus) {
+        lastStatus = job.status;
+        const msgs = {
+          processing:      `Inference running… (${pct}%)`,
+          postprocessing:  'Enhancing with GFPGAN…',
+          completed:       'Video ready ✓',
+          failed:          `Failed: ${job.error || 'unknown error'}`,
+        };
+        if (msgs[job.status]) addLog(msgs[job.status]);
+      } else if (job.status === 'processing') {
+        // update progress in last log
+        logs[logs.length-1].msg = `Inference running… (${pct}%)`;
+        renderLogs();
+      }
 
       if (job.status === 'completed') {
         clearInterval(pollTimer);
-        setSubmitting(false);
+        setLoading(false);
         showVideo(job.video_url);
       } else if (['failed', 'cancelled'].includes(job.status)) {
         clearInterval(pollTimer);
-        setSubmitting(false);
-        showError(job.error || 'Job failed.');
+        setLoading(false);
+        showError(job.error || 'Job failed unexpectedly.');
       }
-    } catch (err) {
-      console.error('Poll error:', err);
-    }
-  }
-
-  function statusDetail(job) {
-    if (job.status === 'queued')          return 'Waiting in queue...';
-    if (job.status === 'processing')      return `Generating video… ${Math.round((job.progress||0)*100)}%`;
-    if (job.status === 'postprocessing')  return 'Post-processing (GFPGAN + upscale)…';
-    if (job.status === 'completed')       return `Done! ${job.completed_at ? '· ' + job.completed_at.replace('T',' ').replace('Z','') : ''}`;
-    if (job.status === 'failed')          return 'Failed';
-    return job.status;
-  }
-
-  function setStatus(status, progress, detail) {
-    const badge = document.getElementById('status-badge');
-    badge.textContent = status;
-    badge.className   = 'status-badge badge-' + status;
-    document.getElementById('progress-bar').style.width = progress + '%';
-    document.getElementById('status-detail').textContent = detail;
+    } catch(e) { console.warn('poll error', e); }
   }
 
   function showVideo(url) {
-    const wrap   = document.getElementById('video-wrap');
-    const player = document.getElementById('video-player');
-    const dlBtn  = document.getElementById('download-btn');
-    player.src = url;
-    dlBtn.href = url;
-    wrap.style.display = 'block';
+    $('video-player').src = url;
+    $('download-btn').href = url;
+    $('video-card').style.display = 'block';
   }
 
   function showError(msg) {
-    const el = document.getElementById('error-msg');
-    el.textContent = msg;
+    const el = $('error-card');
+    el.textContent = '⚠ ' + msg;
     el.style.display = 'block';
   }
 
-  function clearStatus() {
-    document.getElementById('status-card').style.display = 'none';
-    document.getElementById('video-wrap').style.display = 'none';
-    document.getElementById('error-msg').style.display = 'none';
-    document.getElementById('progress-bar').style.width = '0%';
+  function setLoading(on) {
+    $('gen-btn').disabled = on;
+    $('spinner').style.display = on ? 'block' : 'none';
+    $('gen-label').textContent = on ? 'Generating…' : 'Generate Video';
   }
 
-  function setSubmitting(loading) {
-    const btn = document.getElementById('submit-btn');
-    btn.disabled = loading;
-    btn.textContent = loading ? 'Generating…' : 'Generate Video';
+  // ── Toast ──
+  function toast(msg) {
+    const el = document.createElement('div');
+    el.textContent = msg;
+    Object.assign(el.style, {
+      position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
+      background:'#1e2738', border:'1px solid var(--border2)',
+      color:'var(--txt1)', padding:'10px 20px', borderRadius:'8px',
+      fontSize:'13px', zIndex:'999', boxShadow:'0 8px 24px rgba(0,0,0,.4)',
+      animation:'fadeIn .2s ease',
+    });
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3000);
   }
 </script>
 </body>
