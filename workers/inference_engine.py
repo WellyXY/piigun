@@ -16,47 +16,25 @@ logger = logging.getLogger(__name__)
 INFERENCE_SERVER_URL = os.getenv("INFERENCE_SERVER_URL", "http://localhost:8000")
 
 DEFAULT_PROMPTS = {
-    "blow_job": (
-        "A long-haired woman, facing the camera, holding a man's penis, performing a blow job. "
-        "She slowly takes the entire penis completely into her mouth, fully submerging it until her lips press "
-        "against the base of the penis and lightly touch the testicles, with the penis fully accommodated in her throat, "
-        "and repeatedly moves it in and out with a steady, fluid rhythm multiple times."
-    ),
-    "cowgirl": (
-        "The woman, in a cowgirl position atop the man, facing him, drives her hips downward with fierce, rhythmic intensity, "
-        "guiding his penis deep into her vagina with each deliberate thrust. The penetration is forceful, each motion probing "
-        "the depths and textures within, the slight resistance at the entrance amplifying their raw connection."
-    ),
-    "doggy": (
-        "The man stands behind the woman, extending his penis toward her vagina. As his penis presses against the entrance, "
-        "he enters with a forceful yet controlled rhythm, each thrust delving deep into the texture and warmth within. "
-        "The woman, on her hands and knees, arches her back sharply, her mouth opening slightly with each powerful thrust."
-    ),
-    "handjob": (
-        "In the scene, the woman tightly grasps the man's penis with both hands, moving them slowly up and down, "
-        "the motion of her fingers clearly visible as they glide deliberately to the tip and descend, delivering a perfect handjob. "
-        "Her expression is vivid, cheeks flushed with a deep blush, mouth wide open as she gasps heavily."
-    ),
-    "lift_clothes": (
-        "A female lifts her shirt to reveal her breasts. She cups and jiggles them with both hands. "
-        "Her facial expression is neutral, and her lips are slightly parted. "
-        "The pose is front view, and the motion level is moderate."
-    ),
-    "masturbation": (
-        "The woman, reclining or seated, explores her body with slow, deliberate touches, her fingers tracing over her skin "
-        "before settling on her clitoris with focused, rhythmic strokes. Each movement is intentional, alternating between "
-        "gentle circles and firmer presses, the slick warmth of her arousal heightening the tactile intensity."
-    ),
-    "missionary": (
-        "The woman lies on her back in a missionary pose, her legs spread wide as she drives her hips upward with fierce, "
-        "rhythmic intensity. Each motion is forceful, meeting the man's penetrating thrusts, the penis delving deep into her vagina. "
-        "Her head tilts back, lips parting in a gasping, primal moan."
-    ),
-    "reverse_cowgirl": (
-        "The woman, positioned above the man and facing forward, drives her hips downward with fierce, rhythmic intensity, "
-        "guiding his penis deep into her vagina with each deliberate thrust. Her hands clutch a nearby surface tightly, "
-        "her body arching with unrestrained fervor."
-    ),
+    "blow_job": "A long-haired woman, facing the camera, holding a man's penis, performing a blow job. She slowly takes the entire penis completely into her mouth, fully submerging it until her lips press against the base of the penis and lightly touch the testicles, with the penis fully accommodated in her throat, and repeatedly moves it in and out with a steady, fluid rhythm multiple times.",
+    "cowgirl": "The woman, in a cowgirl position atop the man, facing him, drives her hips downward with fierce, rhythmic intensity, guiding his penis deep into her vagina with each deliberate thrust. The penetration is forceful, each motion probing the depths and textures within, the slight resistance at the entrance amplifying their raw connection. Her hands tightly clutch a nearby surface or her thighs, her body arching with unrestrained fervor. Her head tilts back sharply, lips parting in a ragged, primal moan that echoes her overwhelming desire.",
+    "doggy": "The man stands behind the woman, extending his penis toward her vagina. As his penis presses against the entrance, he enters with a forceful yet controlled rhythm, each thrust delving deep into the texture and warmth within. The slight resistance of the vaginal opening intensifies the precision of his movements, his hands gripping her hips firmly for support. The woman, on her hands and knees, arches her back sharply, her mouth opening slightly with each powerful thrust.",
+    "handjob": "In the scene, the woman tightly grasps the man's penis with both hands, moving them slowly up and down, the motion of her fingers clearly visible as they glide deliberately to the tip and descend, delivering a perfect handjob. Her expression is vivid, cheeks flushed with a deep blush, mouth wide open as she gasps heavily, letting out bold moans, her gaze intensely fixed on him before half-closing.",
+    "lift_clothes": "A female lifts her shirt to reveal her breasts. She cups and jiggles them with both hands. Her facial expression is neutral, and her lips are slightly parted. The pose is front view, and the motion level is moderate. The camera is static with a medium shot. The performance is suggestive and moderately paced.",
+    "masturbation": "The woman, reclining or seated, explores her body with slow, deliberate touches, her fingers tracing over her skin before settling on her clitoris with focused, rhythmic strokes. Each movement is intentional, alternating between gentle circles and firmer presses, the slick warmth of her arousal heightening the tactile intensity. Her other hand roams, teasing her breasts or inner thighs, amplifying the building sensation. Her head tilts back sharply, lips parting in a soft, primal moan that betrays her deepening pleasure.",
+    "missionary": "The woman, a fair-skinned blonde with piercing blue eyes, lies on her back in a missionary pose, her legs spread wide as she drives her hips upward with fierce, rhythmic intensity. Each motion is forceful, meeting the man's penetrating thrusts, the penis delving deep into her vagina. Her head tilts back, lips parting in a gasping, primal moan that echoes her consuming desire.",
+    "reverse_cowgirl": "The woman, positioned above the man and facing forward, drives her hips downward with fierce, rhythmic intensity, guiding his penis deep into her vagina with each deliberate thrust. Her hands clutch a nearby surface or her thighs tightly, her body arching with unrestrained fervor. Her head is tilted slightly back, eyes fixed forward, maintaining a steady gaze ahead.",
+}
+
+DEFAULT_AUDIO = {
+    "blow_job":        "wet slurping sounds, she moans softly around the shaft, occasional gagging followed by breathless gasps, whispering 'you taste so good' in a husky voice, her breathing deepening with arousal.",
+    "cowgirl":         "rhythmic skin-on-skin contact, soft bed springs creaking, she moans loudly between heavy breaths, whispering \"you feel so good\" and \"don't stop\" in a sultry breathless voice, her moans building in intensity with each thrust.",
+    "doggy":           "loud rhythmic slapping sounds, she moans deeply with each thrust, gasping \"harder\" and \"right there\" in a breathy desperate voice, the sounds of her gripping the sheets, heavy panting mixed with sharp cries of pleasure.",
+    "handjob":         "wet stroking sounds, she whispers \"you like that?\" and \"come for me\" in a teasing seductive voice, soft moaning between strokes, her breathing getting heavier and faster, occasional giggles mixed with sultry encouragement.",
+    "lift_clothes":    "soft fabric rustling, she giggles playfully and whispers \"want to see more?\" in a teasing innocent voice, light breathing, a soft moan as she touches herself, whispering \"do you like what you see?\"",
+    "masturbation":    "wet rhythmic sounds, soft building moans, she whispers \"oh god\" and \"yes\" breathlessly, her breathing becoming ragged and desperate, crescendo of pleasure sounds, gasping and whimpering with increasing urgency.",
+    "missionary":      "bed creaking rhythmically, skin slapping sounds, she moans \"deeper\" and \"don't stop\" with increasing desperation, heavy breathing mixed with sharp gasps, her voice breaking with pleasure, whispering \"I'm so close\".",
+    "reverse_cowgirl": "rhythmic bouncing sounds, skin contact, she moans with a deep primal intensity, gasping \"you feel amazing\" and \"so deep\" in a breathy voice, heavy panting and sharp exhales punctuating each downward thrust.",
 }
 
 
@@ -104,9 +82,11 @@ class InferenceEngine:
 
         # Use full default prompt if user didn't provide one
         effective_prompt = prompt.strip() or DEFAULT_PROMPTS.get(position, position.replace("_", " "))
+        # Auto-fill audio description from presets when audio is enabled
+        effective_audio = audio_description.strip() if audio_description else (DEFAULT_AUDIO.get(position, "") if include_audio else "")
 
         t0 = time.time()
-        logger.info(f"[GPU {self.gpu_id}] Calling server: position={position}, frames={num_frames}, prompt='{effective_prompt}'")
+        logger.info(f"[GPU {self.gpu_id}] Calling server: position={position}, frames={num_frames}, audio={include_audio}")
 
         payload: dict = {
             "prompt": effective_prompt,
@@ -115,10 +95,9 @@ class InferenceEngine:
             "num_frames": num_frames,
             "seed": seed,
             "enhance": True,
-            "include_audio": include_audio,
         }
-        if include_audio and audio_description:
-            payload["audio_description"] = audio_description
+        if include_audio and effective_audio:
+            payload["audio_description"] = effective_audio
 
         resp = httpx.post(
             f"{self.server_url}/generate",
