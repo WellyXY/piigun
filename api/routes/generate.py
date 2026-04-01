@@ -86,6 +86,8 @@ async def submit_generate(
         image_url=image_url,
         callback_url=req.callback_url,
         api_key_hash=key_hash,
+        include_audio=req.include_audio,
+        audio_description=req.audio_description or "",
     )
 
     # Persist to PostgreSQL

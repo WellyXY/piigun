@@ -122,6 +122,8 @@ async def process_job(engine: InferenceEngine, r: aioredis.Redis, job_id: str):
             prompt=job.get("prompt", ""),
             duration=int(job.get("duration", 10)),
             seed=int(job.get("seed", 42)),
+            include_audio=job.get("include_audio", "false").lower() == "true",
+            audio_description=job.get("audio_description", ""),
         )
         try:
             os.unlink(tmp_image_path)

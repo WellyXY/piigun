@@ -33,6 +33,8 @@ class GenerateRequest(BaseModel):
     duration: int = Field(default=10, ge=5, le=10)
     seed: Optional[int] = None
     callback_url: Optional[str] = None
+    include_audio: bool = False
+    audio_description: Optional[str] = ""
 
     @model_validator(mode="after")
     def check_image_source(self):

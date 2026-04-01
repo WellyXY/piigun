@@ -696,12 +696,29 @@
       document.querySelectorAll('.pos-chip').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       selectedPos = btn.dataset.value;
+      if ($('audio-toggle').checked) autoFillAudio(btn.dataset.value);
     });
   });
+
+  const AUDIO_PROMPTS = {
+    blow_job:        "moaning softly, wet slurping sounds, breathless whimpers, saying 'you taste so good'",
+    cowgirl:         "riding moans, breathless panting, saying 'oh yes right there', skin slapping sounds",
+    doggy:           "loud moaning, gasping with each thrust, saying 'harder', rhythmic slapping sounds",
+    handjob:         "soft moaning, teasing whispers, saying 'does that feel good', gentle stroking sounds",
+    lift_clothes:    "eager moaning, whispered 'take it off', breathless sighing, fabric rustling",
+    masturbation:    "soft self-pleasure moans, whispering 'yes', wet sounds, quiet breathless climax",
+    missionary:      "intimate moaning, deep sighs, saying 'I love this', tender kissing sounds",
+    reverse_cowgirl: "bouncing moans, breathless panting, saying 'you feel so deep', rhythmic slapping",
+  };
+
+  function autoFillAudio(pos) {
+    if (AUDIO_PROMPTS[pos]) $('audio-prompt').value = AUDIO_PROMPTS[pos];
+  }
 
   // ── Audio toggle ──
   $('audio-toggle').addEventListener('change', () => {
     $('audio-wrap').style.display = $('audio-toggle').checked ? 'block' : 'none';
+    if ($('audio-toggle').checked) autoFillAudio(selectedPos);
   });
 
   // ── Duration ──
@@ -757,8 +774,8 @@
           position:          selectedPos,
           prompt:            $('prompt').value.trim(),
           duration:          parseInt($('duration').value),
-          ...($('audio-toggle').checked && $('audio-prompt').value.trim()
-            ? { audio_description: $('audio-prompt').value.trim() } : {}),
+          include_audio:     $('audio-toggle').checked,
+          audio_description: $('audio-toggle').checked ? $('audio-prompt').value.trim() : '',
         }),
       });
       const data = await res.json();

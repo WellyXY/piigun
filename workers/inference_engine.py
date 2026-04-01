@@ -46,6 +46,8 @@ class InferenceEngine:
         prompt: str = "",
         duration: int = 10,
         seed: int = 42,
+        include_audio: bool = False,
+        audio_description: str = "",
         **kwargs,
     ) -> tuple[str, float]:
         """
@@ -59,16 +61,21 @@ class InferenceEngine:
         t0 = time.time()
         logger.info(f"[GPU {self.gpu_id}] Calling server: position={position}, frames={num_frames}")
 
+        payload: dict = {
+            "prompt": prompt,
+            "position": position,
+            "image_path": image_path,
+            "num_frames": num_frames,
+            "seed": seed,
+            "enhance": True,
+            "include_audio": include_audio,
+        }
+        if include_audio and audio_description:
+            payload["audio_description"] = audio_description
+
         resp = httpx.post(
             f"{self.server_url}/generate",
-            json={
-                "prompt": prompt,
-                "position": position,
-                "image_path": image_path,
-                "num_frames": num_frames,
-                "seed": seed,
-                "enhance": True,
-            },
+            json=payload,
             timeout=600,
         )
         resp.raise_for_status()

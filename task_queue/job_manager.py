@@ -27,6 +27,8 @@ async def create_job(
     image_url: str,
     callback_url: Optional[str],
     api_key_hash: str,
+    include_audio: bool = False,
+    audio_description: str = "",
 ) -> dict:
     job_id = f"job_{uuid.uuid4().hex[:12]}"
     now = time.time()
@@ -42,6 +44,8 @@ async def create_job(
         "image_url": image_url,
         "callback_url": callback_url or "",
         "api_key_hash": api_key_hash,
+        "include_audio": include_audio,
+        "audio_description": audio_description,
         "created_at": now,
         "started_at": 0,
         "completed_at": 0,
