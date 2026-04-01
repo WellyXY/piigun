@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 import redis.asyncio as aioredis
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from api.config import settings
@@ -140,3 +140,10 @@ async def global_exception_handler(request: Request, exc: Exception):
 @app.get("/health")
 async def health_check():
     return {"status": "ok", "service": settings.PROJECT_NAME}
+
+
+@app.get("/test")
+async def test_ui():
+    import os
+    path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "index.html")
+    return FileResponse(path, media_type="text/html")

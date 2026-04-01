@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Parrot API — Test</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0f0f0f;
+      color: #e0e0e0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 40px 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 560px;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 32px;
+      letter-spacing: -0.3px;
+    }
+    h1 span { color: #7c6af7; }
+
+    .card {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    input[type="text"], input[type="password"], select, textarea {
+      width: 100%;
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #e0e0e0;
+      font-size: 0.95rem;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus, select:focus, textarea:focus { border-color: #7c6af7; }
+    select option { background: #1a1a1a; }
+
+    .field { margin-bottom: 18px; }
+
+    /* Upload zone */
+    .upload-zone {
+      border: 2px dashed #333;
+      border-radius: 10px;
+      padding: 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: #7c6af7;
+      background: rgba(124, 106, 247, 0.05);
+    }
+    .upload-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer;
+      width: 100%; height: 100%;
+    }
+    .upload-zone .icon { font-size: 2rem; margin-bottom: 8px; }
+    .upload-zone .hint { font-size: 0.85rem; color: #666; }
+    .upload-zone .filename { font-size: 0.9rem; color: #7c6af7; margin-top: 8px; }
+
+    #preview-wrap {
+      margin-top: 12px;
+      display: none;
+      position: relative;
+    }
+    #preview-wrap img {
+      width: 100%;
+      border-radius: 8px;
+      max-height: 300px;
+      object-fit: cover;
+    }
+    #clear-img {
+      position: absolute; top: 8px; right: 8px;
+      background: rgba(0,0,0,0.7); border: none;
+      color: #fff; border-radius: 50%; width: 28px; height: 28px;
+      cursor: pointer; font-size: 1rem; display: flex;
+      align-items: center; justify-content: center;
+    }
+
+    /* Position grid */
+    .position-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .pos-btn {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #aaa;
+      font-size: 0.75rem;
+      padding: 8px 4px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+      line-height: 1.3;
+    }
+    .pos-btn:hover { border-color: #7c6af7; color: #fff; }
+    .pos-btn.active {
+      background: rgba(124,106,247,0.15);
+      border-color: #7c6af7;
+      color: #fff;
+    }
+
+    /* Duration */
+    .duration-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    input[type="range"] {
+      flex: 1;
+      accent-color: #7c6af7;
+    }
+    .duration-val {
+      min-width: 36px;
+      text-align: right;
+      font-weight: 600;
+      color: #7c6af7;
+    }
+
+    /* Submit */
+    #submit-btn {
+      width: 100%;
+      background: #7c6af7;
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      padding: 14px;
+      cursor: pointer;
+      transition: background 0.2s, opacity 0.2s;
+    }
+    #submit-btn:hover:not(:disabled) { background: #6a59e0; }
+    #submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Status */
+    #status-card { display: none; }
+
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .status-badge {
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-queued     { background: #2a2a00; color: #f0c040; }
+    .badge-processing { background: #001a2a; color: #40a0f0; }
+    .badge-postprocessing { background: #001a2a; color: #40d0f0; }
+    .badge-completed  { background: #002a10; color: #40d080; }
+    .badge-failed     { background: #2a0000; color: #f06060; }
+
+    .progress-bar-wrap {
+      background: #222;
+      border-radius: 4px;
+      height: 6px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      background: #7c6af7;
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.4s ease;
+    }
+
+    .job-id {
+      font-size: 0.75rem;
+      color: #555;
+      font-family: monospace;
+    }
+
+    /* Video */
+    #video-wrap { display: none; margin-top: 16px; }
+    #video-wrap video {
+      width: 100%;
+      border-radius: 10px;
+      background: #000;
+    }
+    #download-btn {
+      display: block;
+      margin-top: 10px;
+      text-align: center;
+      background: #222;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #aaa;
+      font-size: 0.85rem;
+      padding: 10px;
+      text-decoration: none;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    #download-btn:hover { border-color: #7c6af7; color: #fff; }
+
+    .error-msg {
+      background: #1a0000;
+      border: 1px solid #5a0000;
+      border-radius: 8px;
+      color: #f06060;
+      font-size: 0.85rem;
+      padding: 10px 14px;
+      margin-top: 12px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Parrot API <span>Test</span></h1>
+
+  <!-- Config -->
+  <div class="card">
+    <div class="field">
+      <label>API Key</label>
+      <input type="password" id="api-key" placeholder="pk_..." />
+    </div>
+    <div class="field" style="margin-bottom:0">
+      <label>API Base URL</label>
+      <input type="text" id="base-url" value="https://www.racoonn.me" />
+    </div>
+  </div>
+
+  <!-- Image -->
+  <div class="card">
+    <label>Input Image</label>
+    <div class="upload-zone" id="upload-zone">
+      <input type="file" id="file-input" accept="image/*" />
+      <div class="icon">🖼️</div>
+      <div class="hint">Click or drag an image here</div>
+      <div class="filename" id="filename"></div>
+    </div>
+    <div id="preview-wrap">
+      <img id="preview-img" src="" alt="preview" />
+      <button id="clear-img">✕</button>
+    </div>
+  </div>
+
+  <!-- Position -->
+  <div class="card">
+    <div class="field">
+      <label>Position</label>
+      <div class="position-grid" id="position-grid">
+        <button class="pos-btn active" data-value="blow_job">Blow Job</button>
+        <button class="pos-btn" data-value="cowgirl">Cowgirl</button>
+        <button class="pos-btn" data-value="doggy">Doggy</button>
+        <button class="pos-btn" data-value="handjob">Handjob</button>
+        <button class="pos-btn" data-value="lift_clothes">Lift Clothes</button>
+        <button class="pos-btn" data-value="masturbation">Masturbation</button>
+        <button class="pos-btn" data-value="missionary">Missionary</button>
+        <button class="pos-btn" data-value="reverse_cowgirl">Reverse Cowgirl</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Prompt (optional)</label>
+      <textarea id="prompt" rows="2" placeholder="Describe the scene..."></textarea>
+    </div>
+
+    <div class="field" style="margin-bottom:0">
+      <label>Duration</label>
+      <div class="duration-row">
+        <input type="range" id="duration" min="5" max="10" value="10" step="1" />
+        <span class="duration-val" id="duration-val">10s</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Submit -->
+  <button id="submit-btn">Generate Video</button>
+
+  <!-- Status -->
+  <div class="card" id="status-card" style="margin-top:20px">
+    <div class="status-row">
+      <span id="status-badge" class="status-badge badge-queued">Queued</span>
+      <span class="job-id" id="job-id-label"></span>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+    </div>
+    <div style="font-size:0.85rem; color:#666" id="status-detail">Waiting in queue...</div>
+    <div class="error-msg" id="error-msg"></div>
+
+    <div id="video-wrap">
+      <video id="video-player" controls autoplay loop></video>
+      <a id="download-btn" href="#" download>⬇ Download Video</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_KEY   = () => document.getElementById('api-key').value.trim();
+  const BASE_URL  = () => document.getElementById('base-url').value.trim().replace(/\/$/, '');
+
+  let selectedPosition = 'blow_job';
+  let imageBase64 = null;
+  let pollTimer = null;
+
+  // Position select
+  document.querySelectorAll('.pos-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.pos-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedPosition = btn.dataset.value;
+    });
+  });
+
+  // Duration slider
+  const durSlider = document.getElementById('duration');
+  const durVal    = document.getElementById('duration-val');
+  durSlider.addEventListener('input', () => durVal.textContent = durSlider.value + 's');
+
+  // File upload / drag-drop
+  const zone = document.getElementById('upload-zone');
+  const fileInput = document.getElementById('file-input');
+  const previewWrap = document.getElementById('preview-wrap');
+  const previewImg  = document.getElementById('preview-img');
+
+  zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', () => { if (fileInput.files[0]) loadFile(fileInput.files[0]); });
+
+  function loadFile(file) {
+    document.getElementById('filename').textContent = file.name;
+    const reader = new FileReader();
+    reader.onload = e => {
+      imageBase64 = e.target.result.split(',')[1];
+      previewImg.src = e.target.result;
+      previewWrap.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  document.getElementById('clear-img').addEventListener('click', () => {
+    imageBase64 = null;
+    previewWrap.style.display = 'none';
+    previewImg.src = '';
+    fileInput.value = '';
+    document.getElementById('filename').textContent = '';
+  });
+
+  // Submit
+  document.getElementById('submit-btn').addEventListener('click', async () => {
+    if (!API_KEY()) return alert('Enter your API key.');
+    if (!imageBase64) return alert('Upload an image first.');
+
+    setSubmitting(true);
+    clearStatus();
+
+    try {
+      const resp = await fetch(`${BASE_URL()}/v1/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': API_KEY(),
+        },
+        body: JSON.stringify({
+          image_base64: imageBase64,
+          position: selectedPosition,
+          prompt: document.getElementById('prompt').value.trim(),
+          duration: parseInt(durSlider.value),
+        }),
+      });
+
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.detail || JSON.stringify(data));
+
+      showStatusCard(data.job_id, data.position_in_queue, data.estimated_wait_seconds);
+      startPolling(data.job_id);
+
+    } catch (err) {
+      setSubmitting(false);
+      alert('Error: ' + err.message);
+    }
+  });
+
+  function showStatusCard(jobId, queuePos, waitSec) {
+    document.getElementById('status-card').style.display = 'block';
+    document.getElementById('job-id-label').textContent = jobId;
+    setStatus('queued', 0, `Position in queue: ${queuePos} · Est. wait: ${waitSec}s`);
+  }
+
+  function startPolling(jobId) {
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(() => pollJob(jobId), 3000);
+  }
+
+  async function pollJob(jobId) {
+    try {
+      const resp = await fetch(`${BASE_URL()}/v1/jobs/${jobId}`, {
+        headers: { 'X-API-Key': API_KEY() }
+      });
+      const job = await resp.json();
+
+      const progress = Math.round((job.progress || 0) * 100);
+      const detail = statusDetail(job);
+      setStatus(job.status, progress, detail);
+
+      if (job.status === 'completed') {
+        clearInterval(pollTimer);
+        setSubmitting(false);
+        showVideo(job.video_url);
+      } else if (['failed', 'cancelled'].includes(job.status)) {
+        clearInterval(pollTimer);
+        setSubmitting(false);
+        showError(job.error || 'Job failed.');
+      }
+    } catch (err) {
+      console.error('Poll error:', err);
+    }
+  }
+
+  function statusDetail(job) {
+    if (job.status === 'queued')          return 'Waiting in queue...';
+    if (job.status === 'processing')      return `Generating video… ${Math.round((job.progress||0)*100)}%`;
+    if (job.status === 'postprocessing')  return 'Post-processing (GFPGAN + upscale)…';
+    if (job.status === 'completed')       return `Done! ${job.completed_at ? '· ' + job.completed_at.replace('T',' ').replace('Z','') : ''}`;
+    if (job.status === 'failed')          return 'Failed';
+    return job.status;
+  }
+
+  function setStatus(status, progress, detail) {
+    const badge = document.getElementById('status-badge');
+    badge.textContent = status;
+    badge.className   = 'status-badge badge-' + status;
+    document.getElementById('progress-bar').style.width = progress + '%';
+    document.getElementById('status-detail').textContent = detail;
+  }
+
+  function showVideo(url) {
+    const wrap   = document.getElementById('video-wrap');
+    const player = document.getElementById('video-player');
+    const dlBtn  = document.getElementById('download-btn');
+    player.src = url;
+    dlBtn.href = url;
+    wrap.style.display = 'block';
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error-msg');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  function clearStatus() {
+    document.getElementById('status-card').style.display = 'none';
+    document.getElementById('video-wrap').style.display = 'none';
+    document.getElementById('error-msg').style.display = 'none';
+    document.getElementById('progress-bar').style.width = '0%';
+  }
+
+  function setSubmitting(loading) {
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = loading;
+    btn.textContent = loading ? 'Generating…' : 'Generate Video';
+  }
+</script>
+</body>
+</html>
