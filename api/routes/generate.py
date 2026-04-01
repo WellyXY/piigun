@@ -21,15 +21,24 @@ router = APIRouter()
 SECONDS_PER_VIDEO = 150
 
 
+def _convert_to_jpeg(raw_bytes: bytes, out_path: str):
+    """Convert any image format (AVIF, WebP, PNG, etc.) to JPEG."""
+    import io
+    from PIL import Image
+    img = Image.open(io.BytesIO(raw_bytes))
+    if img.mode in ("RGBA", "P", "LA"):
+        img = img.convert("RGB")
+    img.save(out_path, "JPEG", quality=95)
+
+
 async def _save_input_image(req: GenerateRequest) -> str:
     os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
     filename = f"{uuid.uuid4().hex[:16]}.jpg"
     filepath = os.path.join(settings.UPLOAD_DIR, filename)
 
     if req.image_base64:
-        data = base64.b64decode(req.image_base64)
-        with open(filepath, "wb") as f:
-            f.write(data)
+        raw = base64.b64decode(req.image_base64)
+        await asyncio.to_thread(_convert_to_jpeg, raw, filepath)
     elif req.image_url:
         async with httpx.AsyncClient(timeout=30) as client:
             resp = await client.get(req.image_url)
@@ -38,8 +47,7 @@ async def _save_input_image(req: GenerateRequest) -> str:
                     status_code=400,
                     detail=f"Failed to download image: HTTP {resp.status_code}",
                 )
-            with open(filepath, "wb") as f:
-                f.write(resp.content)
+            await asyncio.to_thread(_convert_to_jpeg, resp.content, filepath)
 
     return filepath
 
