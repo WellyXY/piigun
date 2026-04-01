@@ -28,7 +28,6 @@ from api.models import JobStatus
 from task_queue.job_manager import get_job, pop_job, update_job
 from webhook.sender import send_webhook
 from workers.inference_engine import InferenceEngine
-from workers.postprocess import run_postprocess
 
 logging.basicConfig(
     level=logging.INFO,
@@ -113,19 +112,9 @@ async def process_job(engine: InferenceEngine, r: aioredis.Redis, job_id: str):
         )
         await update_job(r, job_id, progress=0.7)
 
-        if settings.POSTPROCESS_ENABLED:
-            await update_job(r, job_id, status=JobStatus.POSTPROCESSING.value, progress=0.75)
-            final_path = raw_video_path.replace(".mp4", "_final.mp4")
-            pp_time = run_postprocess(
-                raw_video_path, final_path,
-                target_fps=settings.TARGET_FPS,
-                upscale_factor=settings.UPSCALE_FACTOR,
-            )
-            if os.path.isfile(raw_video_path) and raw_video_path != final_path:
-                os.unlink(raw_video_path)
-        else:
-            final_path = raw_video_path
-            pp_time = 0.0
+        # server.py already handles GFPGAN enhancement
+        final_path = raw_video_path
+        pp_time = 0.0
 
         # Upload to Cloudflare R2
         await update_job(r, job_id, progress=0.9)
