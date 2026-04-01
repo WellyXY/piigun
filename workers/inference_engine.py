@@ -52,7 +52,9 @@ class InferenceEngine:
         Call the local server to generate a video.
         Returns (output_path, generation_time_seconds).
         """
-        num_frames = 161 if duration >= 10 else 81
+        # LTX-Video requires frames = 8n+1. Round up to nearest valid count.
+        raw = duration * 30
+        num_frames = ((raw - 1 + 7) // 8) * 8 + 1  # 5s→153, 10s→305
 
         t0 = time.time()
         logger.info(f"[GPU {self.gpu_id}] Calling server: position={position}, frames={num_frames}")
