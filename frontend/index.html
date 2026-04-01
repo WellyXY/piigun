@@ -310,10 +310,10 @@
     .output-body {
       flex: 1;
       display: flex;
-      align-items: center;
-      justify-content: center;
+      flex-direction: column;
       padding: 24px 28px;
-      overflow: hidden;
+      overflow-y: auto;
+      gap: 20px;
     }
 
     /* Empty state */
@@ -335,11 +335,53 @@
 
     /* Job status panel */
     .job-panel {
-      width: 100%; max-width: 600px;
+      width: 100%;
       display: none;
       flex-direction: column;
       gap: 20px;
     }
+
+    /* History */
+    .history-section { width: 100%; }
+    .history-title {
+      font-size: 11px; font-weight: 600; color: var(--txt3);
+      text-transform: uppercase; letter-spacing: .6px;
+      margin-bottom: 12px;
+    }
+    .history-list { display: flex; flex-direction: column; gap: 10px; }
+    .history-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      display: flex; align-items: center; gap: 14px;
+      cursor: pointer;
+      transition: border-color .15s;
+    }
+    .history-card:hover { border-color: var(--border2); }
+    .history-thumb {
+      width: 56px; height: 40px;
+      border-radius: 6px;
+      background: #000;
+      overflow: hidden; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--txt3); font-size: 18px;
+    }
+    .history-thumb video { width: 100%; height: 100%; object-fit: cover; }
+    .history-info { flex: 1; min-width: 0; }
+    .history-pos { font-size: 12px; font-weight: 600; color: var(--txt1); text-transform: capitalize; }
+    .history-meta { font-size: 11px; color: var(--txt3); margin-top: 2px; }
+    .history-id { font-size: 10px; font-family: monospace; color: var(--txt3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .history-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .history-btn {
+      font-size: 11px; padding: 4px 10px;
+      border-radius: 6px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--txt2);
+      cursor: pointer; font-family: inherit;
+      text-decoration: none; display: inline-flex; align-items: center;
+      transition: border-color .15s, color .15s;
+    }
+    .history-btn:hover { border-color: var(--accent2); color: var(--txt1); }
 
     .job-header {
       display: flex; align-items: center; gap: 12px;
@@ -605,16 +647,16 @@
       <span class="output-title">Output</span>
     </div>
 
-    <div class="output-body">
+    <div class="output-body" id="output-body">
 
       <!-- Empty state -->
-      <div class="empty-state" id="empty-state">
+      <div class="empty-state" id="empty-state" style="margin:auto">
         <div class="empty-glyph">🎬</div>
         <h2>No video yet</h2>
         <p>Configure your parameters on the left,<br/>then hit Generate to create a video.</p>
       </div>
 
-      <!-- Job panel -->
+      <!-- Active job panel -->
       <div class="job-panel" id="job-panel">
 
         <div class="job-header">
@@ -628,9 +670,7 @@
 
         <!-- Activity log -->
         <div class="log-card">
-          <div class="log-header">
-            ● Activity
-          </div>
+          <div class="log-header">● Activity</div>
           <div class="log-body" id="log-body"></div>
         </div>
 
@@ -638,12 +678,7 @@
         <div class="video-card" id="video-card" style="display:none">
           <video id="video-player" controls autoplay loop playsinline></video>
           <div class="video-actions">
-            <a class="action-btn" id="download-btn" href="#" download>
-              ↓ Download MP4
-            </a>
-            <button class="action-btn" id="new-btn">
-              ↺ New Generation
-            </button>
+            <a class="action-btn" id="download-btn" href="#" download>↓ Download MP4</a>
           </div>
         </div>
 
@@ -651,6 +686,13 @@
         <div class="error-card" id="error-card"></div>
 
       </div>
+
+      <!-- History -->
+      <div class="history-section" id="history-section" style="display:none">
+        <div class="history-title">History</div>
+        <div class="history-list" id="history-list"></div>
+      </div>
+
     </div>
   </div>
 
@@ -662,11 +704,61 @@
   const API_KEY  = () => $('api-key').value.trim();
   const BASE_URL = () => $('base-url').value.trim().replace(/\/$/, '');
 
-  let selectedPos = 'cowgirl';
-  let imageBase64 = null;
-  let fileName    = '';
-  let pollTimer   = null;
-  let logs        = [];
+  let selectedPos  = 'cowgirl';
+  let imageBase64  = null;
+  let fileName     = '';
+  let pollTimer    = null;
+  let logs         = [];
+  let isGenerating = false;
+
+  // ── History (localStorage) ──
+  const HISTORY_KEY = 'piigu_history';
+  let history = (() => { try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; } catch { return []; } })();
+
+  function saveHistory() { try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 50))); } catch {} }
+
+  function addToHistory(entry) {
+    history.unshift(entry);
+    saveHistory();
+    renderHistory();
+  }
+
+  function renderHistory() {
+    if (!history.length) { $('history-section').style.display = 'none'; return; }
+    $('history-section').style.display = 'block';
+    $('history-list').innerHTML = history.map((h, i) => `
+      <div class="history-card" onclick="expandHistory(${i})">
+        <div class="history-thumb">
+          ${h.video_url
+            ? `<video src="${h.video_url}" muted playsinline preload="metadata"></video>`
+            : (h.status === 'failed' ? '✕' : '⏳')}
+        </div>
+        <div class="history-info">
+          <div class="history-pos">${h.position.replace('_',' ')}</div>
+          <div class="history-meta">${h.duration}s · ${h.ts}</div>
+          <div class="history-id">${h.job_id}</div>
+        </div>
+        <div class="history-actions">
+          ${h.video_url ? `<a class="history-btn" href="${h.video_url}" download onclick="event.stopPropagation()">↓</a>` : ''}
+          <span class="status-pill pill-${h.status}" style="font-size:10px;padding:3px 8px">${h.status}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  window.expandHistory = function(i) {
+    const h = history[i];
+    if (!h.video_url) return;
+    $('video-player').src = h.video_url;
+    $('download-btn').href = h.video_url;
+    $('video-card').style.display = 'block';
+    $('job-id-badge').textContent = h.job_id;
+    setStatus(h.status, 100);
+    $('empty-state').style.display = 'none';
+    $('job-panel').style.display = 'flex';
+  };
+
+  renderHistory();
 
   // ── Connection check ──
   async function checkConnection() {
@@ -761,9 +853,10 @@
   $('gen-btn').addEventListener('click', async () => {
     if (!API_KEY())     return toast('Enter your API key');
     if (!imageBase64)   return toast('Upload an image first');
+    if (isGenerating)   return toast('A generation is already in progress');
 
     setLoading(true);
-    resetOutput();
+    startNewJob();
 
     try {
       const res = await fetch(`${BASE_URL()}/v1/generate`, {
@@ -781,28 +874,30 @@
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || JSON.stringify(data));
 
-      showJobPanel(data);
-      startPolling(data.job_id);
+      $('job-id-badge').textContent = data.job_id;
+      addLog(`Job queued · position ${data.position_in_queue} · ~${data.estimated_wait_seconds}s wait`);
+      startPolling(data.job_id, selectedPos, parseInt($('duration').value));
     } catch(err) {
+      isGenerating = false;
       setLoading(false);
+      showError(err.message);
       toast('Error: ' + err.message);
     }
   });
 
-  $('new-btn').addEventListener('click', () => {
-    resetOutput();
-    $('job-panel').style.display = 'none';
-    $('empty-state').style.display = 'block';
-    setLoading(false);
-  });
-
   // ── Output helpers ──
-  function showJobPanel(data) {
+  function startNewJob() {
+    if (pollTimer) clearInterval(pollTimer);
+    logs = [];
+    $('log-body').innerHTML = '';
+    $('video-card').style.display = 'none';
+    $('error-card').style.display = 'none';
+    $('progress-fill').style.width = '0%';
+    $('job-id-badge').textContent = '—';
+    setStatus('queued', 0);
     $('empty-state').style.display = 'none';
     $('job-panel').style.display = 'flex';
-    $('job-id-badge').textContent = data.job_id;
-    setStatus('queued', 0);
-    addLog(`Job queued · position ${data.position_in_queue} · ~${data.estimated_wait_seconds}s wait`);
+    isGenerating = true;
   }
 
   function setStatus(status, progress) {
@@ -829,56 +924,48 @@
     $('log-body').scrollTop = $('log-body').scrollHeight;
   }
 
-  function resetOutput() {
-    logs = [];
-    $('log-body').innerHTML = '';
-    $('video-card').style.display = 'none';
-    $('error-card').style.display = 'none';
-    $('progress-fill').style.width = '0%';
-    if (pollTimer) clearInterval(pollTimer);
-  }
-
   // ── Polling ──
-  function startPolling(jobId) {
-    pollTimer = setInterval(() => poll(jobId), 3000);
-  }
+  function startPolling(jobId, position, duration) {
+    let lastStatus = '';
+    pollTimer = setInterval(async () => {
+      try {
+        const res = await fetch(`${BASE_URL()}/v1/jobs/${jobId}`, {
+          headers: { 'X-API-Key': API_KEY() }
+        });
+        const job = await res.json();
+        const pct = Math.round((job.progress || 0) * 100);
 
-  let lastStatus = '';
-  async function poll(jobId) {
-    try {
-      const res = await fetch(`${BASE_URL()}/v1/jobs/${jobId}`, {
-        headers: { 'X-API-Key': API_KEY() }
-      });
-      const job = await res.json();
-      const pct = Math.round((job.progress || 0) * 100);
+        setStatus(job.status, pct);
 
-      setStatus(job.status, pct);
+        if (job.status !== lastStatus) {
+          lastStatus = job.status;
+          const msgs = {
+            processing:      `Inference running… (${pct}%)`,
+            postprocessing:  'Enhancing with GFPGAN…',
+            completed:       'Video ready ✓',
+            failed:          `Failed: ${job.error || 'unknown error'}`,
+          };
+          if (msgs[job.status]) addLog(msgs[job.status]);
+        } else if (job.status === 'processing') {
+          logs[logs.length-1].msg = `Inference running… (${pct}%)`;
+          renderLogs();
+        }
 
-      if (job.status !== lastStatus) {
-        lastStatus = job.status;
-        const msgs = {
-          processing:      `Inference running… (${pct}%)`,
-          postprocessing:  'Enhancing with GFPGAN…',
-          completed:       'Video ready ✓',
-          failed:          `Failed: ${job.error || 'unknown error'}`,
-        };
-        if (msgs[job.status]) addLog(msgs[job.status]);
-      } else if (job.status === 'processing') {
-        // update progress in last log
-        logs[logs.length-1].msg = `Inference running… (${pct}%)`;
-        renderLogs();
-      }
-
-      if (job.status === 'completed') {
-        clearInterval(pollTimer);
-        setLoading(false);
-        showVideo(job.video_url);
-      } else if (['failed', 'cancelled'].includes(job.status)) {
-        clearInterval(pollTimer);
-        setLoading(false);
-        showError(job.error || 'Job failed unexpectedly.');
-      }
-    } catch(e) { console.warn('poll error', e); }
+        if (job.status === 'completed') {
+          clearInterval(pollTimer);
+          isGenerating = false;
+          setLoading(false);
+          showVideo(job.video_url);
+          addToHistory({ job_id: jobId, position, duration, status: 'completed', video_url: job.video_url, ts: new Date().toLocaleTimeString() });
+        } else if (['failed', 'cancelled'].includes(job.status)) {
+          clearInterval(pollTimer);
+          isGenerating = false;
+          setLoading(false);
+          showError(job.error || 'Job failed unexpectedly.');
+          addToHistory({ job_id: jobId, position, duration, status: 'failed', video_url: null, ts: new Date().toLocaleTimeString() });
+        }
+      } catch(e) { console.warn('poll error', e); }
+    }, 3000);
   }
 
   function showVideo(url) {
@@ -897,6 +984,7 @@
     $('gen-btn').disabled = on;
     $('spinner').style.display = on ? 'block' : 'none';
     $('gen-label').textContent = on ? 'Generating…' : 'Generate Video';
+    if (!on) isGenerating = false;
   }
 
   // ── Toast ──
