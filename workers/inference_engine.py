@@ -15,6 +15,50 @@ logger = logging.getLogger(__name__)
 
 INFERENCE_SERVER_URL = os.getenv("INFERENCE_SERVER_URL", "http://localhost:8000")
 
+DEFAULT_PROMPTS = {
+    "blow_job": (
+        "A long-haired woman, facing the camera, holding a man's penis, performing a blow job. "
+        "She slowly takes the entire penis completely into her mouth, fully submerging it until her lips press "
+        "against the base of the penis and lightly touch the testicles, with the penis fully accommodated in her throat, "
+        "and repeatedly moves it in and out with a steady, fluid rhythm multiple times."
+    ),
+    "cowgirl": (
+        "The woman, in a cowgirl position atop the man, facing him, drives her hips downward with fierce, rhythmic intensity, "
+        "guiding his penis deep into her vagina with each deliberate thrust. The penetration is forceful, each motion probing "
+        "the depths and textures within, the slight resistance at the entrance amplifying their raw connection."
+    ),
+    "doggy": (
+        "The man stands behind the woman, extending his penis toward her vagina. As his penis presses against the entrance, "
+        "he enters with a forceful yet controlled rhythm, each thrust delving deep into the texture and warmth within. "
+        "The woman, on her hands and knees, arches her back sharply, her mouth opening slightly with each powerful thrust."
+    ),
+    "handjob": (
+        "In the scene, the woman tightly grasps the man's penis with both hands, moving them slowly up and down, "
+        "the motion of her fingers clearly visible as they glide deliberately to the tip and descend, delivering a perfect handjob. "
+        "Her expression is vivid, cheeks flushed with a deep blush, mouth wide open as she gasps heavily."
+    ),
+    "lift_clothes": (
+        "A female lifts her shirt to reveal her breasts. She cups and jiggles them with both hands. "
+        "Her facial expression is neutral, and her lips are slightly parted. "
+        "The pose is front view, and the motion level is moderate."
+    ),
+    "masturbation": (
+        "The woman, reclining or seated, explores her body with slow, deliberate touches, her fingers tracing over her skin "
+        "before settling on her clitoris with focused, rhythmic strokes. Each movement is intentional, alternating between "
+        "gentle circles and firmer presses, the slick warmth of her arousal heightening the tactile intensity."
+    ),
+    "missionary": (
+        "The woman lies on her back in a missionary pose, her legs spread wide as she drives her hips upward with fierce, "
+        "rhythmic intensity. Each motion is forceful, meeting the man's penetrating thrusts, the penis delving deep into her vagina. "
+        "Her head tilts back, lips parting in a gasping, primal moan."
+    ),
+    "reverse_cowgirl": (
+        "The woman, positioned above the man and facing forward, drives her hips downward with fierce, rhythmic intensity, "
+        "guiding his penis deep into her vagina with each deliberate thrust. Her hands clutch a nearby surface tightly, "
+        "her body arching with unrestrained fervor."
+    ),
+}
+
 
 @dataclass
 class InferenceEngine:
@@ -58,8 +102,8 @@ class InferenceEngine:
         raw = duration * 30
         num_frames = ((raw - 1 + 7) // 8) * 8 + 1  # 5s→153, 10s→305
 
-        # Use position name as trigger word if no prompt provided
-        effective_prompt = prompt.strip() or position.replace("_", " ")
+        # Use full default prompt if user didn't provide one
+        effective_prompt = prompt.strip() or DEFAULT_PROMPTS.get(position, position.replace("_", " "))
 
         t0 = time.time()
         logger.info(f"[GPU {self.gpu_id}] Calling server: position={position}, frames={num_frames}, prompt='{effective_prompt}'")
