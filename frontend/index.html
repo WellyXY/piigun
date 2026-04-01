@@ -676,7 +676,7 @@
 
         <!-- Video -->
         <div class="video-card" id="video-card" style="display:none">
-          <video id="video-player" controls autoplay loop playsinline></video>
+          <video id="video-player" controls autoplay playsinline></video>
           <div class="video-actions">
             <a class="action-btn" id="download-btn" href="#" download>↓ Download MP4</a>
           </div>
@@ -749,9 +749,8 @@
   window.expandHistory = function(i) {
     const h = history[i];
     if (!h.video_url) return;
-    $('video-player').src = h.video_url;
+    showVideo(h.video_url);
     $('download-btn').href = h.video_url;
-    $('video-card').style.display = 'block';
     $('job-id-badge').textContent = h.job_id;
     setStatus(h.status, 100);
     $('empty-state').style.display = 'none';
@@ -969,9 +968,12 @@
   }
 
   function showVideo(url) {
-    $('video-player').src = url;
+    const v = $('video-player');
+    v.src = url;
     $('download-btn').href = url;
     $('video-card').style.display = 'block';
+    // Stop at 10s max, play once
+    v.ontimeupdate = () => { if (v.currentTime >= 10) { v.pause(); v.ontimeupdate = null; } };
   }
 
   function showError(msg) {
