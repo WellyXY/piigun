@@ -58,11 +58,14 @@ class InferenceEngine:
         raw = duration * 30
         num_frames = ((raw - 1 + 7) // 8) * 8 + 1  # 5s→153, 10s→305
 
+        # Use position name as trigger word if no prompt provided
+        effective_prompt = prompt.strip() or position.replace("_", " ")
+
         t0 = time.time()
-        logger.info(f"[GPU {self.gpu_id}] Calling server: position={position}, frames={num_frames}")
+        logger.info(f"[GPU {self.gpu_id}] Calling server: position={position}, frames={num_frames}, prompt='{effective_prompt}'")
 
         payload: dict = {
-            "prompt": prompt,
+            "prompt": effective_prompt,
             "position": position,
             "image_path": image_path,
             "num_frames": num_frames,
