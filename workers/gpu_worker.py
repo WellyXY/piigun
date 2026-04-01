@@ -103,13 +103,30 @@ async def process_job(engine: InferenceEngine, r: aioredis.Redis, job_id: str):
                      started_at=started_at, progress=0.1)
 
     try:
+        # Download input image from R2 to a local temp file
+        import tempfile
+        import httpx as _httpx
+        image_url = job.get("image_url") or job.get("image_path", "")
+        tmp_image = tempfile.NamedTemporaryFile(suffix=".jpg", delete=False)
+        tmp_image_path = tmp_image.name
+        tmp_image.close()
+        async with _httpx.AsyncClient(timeout=30) as _client:
+            _resp = await _client.get(image_url)
+            _resp.raise_for_status()
+        with open(tmp_image_path, "wb") as _f:
+            _f.write(_resp.content)
+
         raw_video_path, gen_time = engine.generate(
             position=position,
-            image_path=job["image_path"],
+            image_path=tmp_image_path,
             prompt=job.get("prompt", ""),
             duration=int(job.get("duration", 10)),
             seed=int(job.get("seed", 42)),
         )
+        try:
+            os.unlink(tmp_image_path)
+        except Exception:
+            pass
         await update_job(r, job_id, progress=0.7)
 
         # server.py already handles GFPGAN enhancement

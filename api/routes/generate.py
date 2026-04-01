@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import base64
 import os
 import uuid
@@ -13,6 +14,7 @@ from api.config import settings
 from api.models import ErrorResponse, GenerateRequest, GenerateResponse, JobStatus
 from task_queue.job_manager import create_job, get_queue_length
 from db import job_store
+from storage import r2_storage
 
 router = APIRouter()
 
@@ -52,7 +54,20 @@ async def submit_generate(
     key_hash: str = Depends(verify_api_key),
 ):
     r = await get_redis()
-    image_path = await _save_input_image(req)
+    local_path = await _save_input_image(req)
+
+    # Upload image to R2 so RunPod worker can access it
+    image_id = os.path.splitext(os.path.basename(local_path))[0]
+    try:
+        image_url = await asyncio.to_thread(r2_storage.upload_image, image_id, local_path)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to upload image to R2: {e}")
+    finally:
+        import asyncio as _asyncio
+        try:
+            os.unlink(local_path)
+        except Exception:
+            pass
 
     job = await create_job(
         r,
@@ -60,7 +75,7 @@ async def submit_generate(
         prompt=req.prompt or "",
         duration=req.duration,
         seed=req.seed,
-        image_path=image_path,
+        image_url=image_url,
         callback_url=req.callback_url,
         api_key_hash=key_hash,
     )

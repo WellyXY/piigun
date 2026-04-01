@@ -54,6 +54,22 @@ def upload_video(job_id: str, local_path: str) -> str:
     return public_url
 
 
+def upload_image(image_id: str, local_path: str) -> str:
+    """Upload an input image to R2. Returns the public URL."""
+    key = f"uploads/{image_id}.jpg"
+    client = _get_client()
+    logger.info(f"[R2] Uploading image {local_path} → {key}")
+    client.upload_file(
+        local_path,
+        settings.R2_BUCKET_NAME,
+        key,
+        ExtraArgs={"ContentType": "image/jpeg"},
+    )
+    public_url = f"{settings.R2_PUBLIC_URL.rstrip('/')}/{key}"
+    logger.info(f"[R2] Image upload complete: {public_url}")
+    return public_url
+
+
 def delete_video(job_id: str):
     """Delete a video from R2 (e.g. during cleanup)."""
     key = f"videos/{job_id}.mp4"

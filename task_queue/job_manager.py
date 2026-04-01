@@ -24,7 +24,7 @@ async def create_job(
     prompt: str,
     duration: int,
     seed: Optional[int],
-    image_path: str,
+    image_url: str,
     callback_url: Optional[str],
     api_key_hash: str,
 ) -> dict:
@@ -39,7 +39,7 @@ async def create_job(
         "prompt": prompt or "",
         "duration": duration,
         "seed": seed if seed is not None else int(now) % 100000,
-        "image_path": image_path,
+        "image_url": image_url,
         "callback_url": callback_url or "",
         "api_key_hash": api_key_hash,
         "created_at": now,
