@@ -51,6 +51,10 @@ ADD_CREDITS_CHARGED_SQL = """
 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS credits_charged NUMERIC(12,4) DEFAULT 0;
 """
 
+ADD_RAW_KEY_SQL = """
+ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS raw_key TEXT DEFAULT '';
+"""
+
 
 async def get_pool() -> asyncpg.Pool:
     global _pool
@@ -62,6 +66,7 @@ async def get_pool() -> asyncpg.Pool:
             await conn.execute(CREATE_TABLE_SQL)
             await conn.execute(CREATE_API_KEYS_SQL)
             await conn.execute(ADD_CREDITS_CHARGED_SQL)
+            await conn.execute(ADD_RAW_KEY_SQL)
         logger.info("[DB] PostgreSQL pool ready")
     return _pool
 
@@ -171,7 +176,11 @@ async def get_jobs_paginated(
         )
         rows = await conn.fetch(
             f"""
-            SELECT j.*, k.name as key_name
+            SELECT j.job_id, j.api_key_hash, j.status, j.position, j.prompt,
+                   j.duration, j.seed, j.video_url, j.error,
+                   j.created_at, j.started_at, j.completed_at, j.callback_url,
+                   COALESCE(j.credits_charged, 0) as credits_charged,
+                   k.name as key_name
             FROM jobs j
             LEFT JOIN api_keys k ON j.api_key_hash = k.key_hash
             {where}
@@ -222,17 +231,17 @@ async def get_key_jobs(
 
 # ── API Key CRUD ──────────────────────────────────────────────────────────────
 
-async def upsert_api_key(key_hash: str, name: str, created_at: float, credits: float = 0.0):
+async def upsert_api_key(key_hash: str, name: str, created_at: float, credits: float = 0.0, raw_key: str = ""):
     """Insert a new API key. No-op if already exists."""
     pool = await get_pool()
     async with pool.acquire() as conn:
         await conn.execute(
             """
-            INSERT INTO api_keys (key_hash, name, created_at, credits)
-            VALUES ($1, $2, $3, $4)
+            INSERT INTO api_keys (key_hash, name, created_at, credits, raw_key)
+            VALUES ($1, $2, $3, $4, $5)
             ON CONFLICT (key_hash) DO NOTHING
             """,
-            key_hash, name, created_at, credits,
+            key_hash, name, created_at, credits, raw_key,
         )
 
 

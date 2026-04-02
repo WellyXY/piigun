@@ -158,6 +158,7 @@ class AdminKeyItem(BaseModel):
     total_jobs: int
     completed_jobs: int
     failed_jobs: int
+    raw_key: str = ""
 
 
 class AdminJobItem(BaseModel):
@@ -170,7 +171,9 @@ class AdminJobItem(BaseModel):
     credits_charged: float
     video_url: Optional[str] = None
     created_at: float
+    started_at: Optional[float] = None
     completed_at: Optional[float] = None
+    runtime_seconds: Optional[float] = None
     prompt: str
     seed: int
     callback_url: str

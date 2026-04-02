@@ -41,6 +41,7 @@ async def list_keys():
                 total_jobs=int(k["total_jobs"]),
                 completed_jobs=int(k["completed_jobs"]),
                 failed_jobs=int(k["failed_jobs"]),
+                raw_key=k.get("raw_key") or "",
             )
             for k in keys
         ]
@@ -77,6 +78,13 @@ async def list_jobs(
 ):
     from db import job_store
     jobs, total = await job_store.get_jobs_paginated(page, limit, key_hash, status)
+    def _runtime(j: dict) -> Optional[float]:
+        s = j.get("started_at")
+        c = j.get("completed_at")
+        if s and c:
+            return round(float(c) - float(s), 1)
+        return None
+
     items = [
         AdminJobItem(
             job_id=j["job_id"],
@@ -88,7 +96,9 @@ async def list_jobs(
             credits_charged=float(j.get("credits_charged") or 0),
             video_url=j.get("video_url") or None,
             created_at=float(j["created_at"]),
+            started_at=float(j["started_at"]) if j.get("started_at") else None,
             completed_at=float(j["completed_at"]) if j.get("completed_at") else None,
+            runtime_seconds=_runtime(j),
             prompt=j.get("prompt", ""),
             seed=int(j.get("seed", 0)),
             callback_url=j.get("callback_url", ""),

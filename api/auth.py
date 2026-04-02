@@ -89,7 +89,7 @@ async def create_api_key(name: str, credits: float = 0.0) -> str:
 
     if settings.DATABASE_URL:
         from db import job_store
-        await job_store.upsert_api_key(key_hash, name, now, credits)
+        await job_store.upsert_api_key(key_hash, name, now, credits, raw_key=raw_key)
 
     # Also write to Redis set (for monthly usage counters) and cache
     r = await get_redis()

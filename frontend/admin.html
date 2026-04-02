@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,7 +10,7 @@
     :root {
       --bg: #07090f; --surface: #0d1117; --panel: #111827;
       --border: #1e2738; --border2: #263248;
-      --accent: #6366f1; --accent2: #818cf8; --glow: rgba(99,102,241,.18);
+      --accent: #6366f1; --accent2: #818cf8;
       --green: #10b981; --red: #f43f5e; --amber: #f59e0b; --sky: #38bdf8;
       --txt1: #f1f5f9; --txt2: #94a3b8; --txt3: #475569; --radius: 12px;
     }
@@ -59,7 +59,7 @@
 
     /* ── Table ── */
     table { width: 100%; border-collapse: collapse; }
-    th { text-align: left; padding: 10px 16px; font-size: 11px; font-weight: 600; color: var(--txt2); text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--border); background: var(--panel); }
+    th { text-align: left; padding: 10px 16px; font-size: 11px; font-weight: 600; color: var(--txt2); text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--border); background: var(--panel); white-space: nowrap; }
     td { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
     tr:last-child td { border-bottom: none; }
     tr.expandable { cursor: pointer; }
@@ -76,7 +76,7 @@
     /* ── Modal ── */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.65); display: none; align-items: center; justify-content: center; z-index: 200; }
     .modal-overlay.open { display: flex; }
-    .modal { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius); padding: 28px; width: 420px; }
+    .modal { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius); padding: 28px; width: 440px; }
     .modal h2 { font-size: 17px; font-weight: 600; margin-bottom: 20px; }
     .form-field { margin-bottom: 14px; }
     .form-field label { display: block; font-size: 12px; font-weight: 500; color: var(--txt2); margin-bottom: 6px; }
@@ -85,12 +85,22 @@
     .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
     .modal-actions .btn { width: auto; }
 
+    /* ── Key reveal box ── */
+    .key-box { background: var(--panel); border: 1px solid var(--border2); border-radius: 8px; padding: 10px 14px; margin-top: 12px; display: flex; align-items: center; gap: 10px; }
+    .key-box .key-val { flex: 1; font-family: 'SFMono-Regular', Consolas, monospace; font-size: 12px; color: var(--green); word-break: break-all; line-height: 1.5; }
+    .key-box button { flex-shrink: 0; }
+    .key-hidden { filter: blur(6px); user-select: none; cursor: pointer; transition: filter .2s; }
+    .key-hidden:hover { filter: blur(3px); }
+
     /* ── Detail row ── */
-    .detail-row > td { background: rgba(17,24,39,.8); padding: 16px 20px; cursor: default; }
-    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
-    .detail-item label { display: block; font-size: 11px; color: var(--txt2); margin-bottom: 3px; font-weight: 500; text-transform: uppercase; letter-spacing: .04em; }
-    .detail-item value { font-size: 13px; word-break: break-all; line-height: 1.5; }
-    video { width: 100%; max-height: 380px; border-radius: 8px; background: #000; margin-top: 12px; display: block; }
+    .detail-row > td { background: rgba(17,24,39,.9); padding: 20px 24px; cursor: default; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+    .detail-item label { display: block; font-size: 11px; color: var(--txt2); margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+    .detail-item value { font-size: 13px; word-break: break-all; line-height: 1.6; }
+    .detail-item.full { grid-column: 1 / -1; }
+    .prompt-text { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 13px; line-height: 1.6; color: var(--txt1); white-space: pre-wrap; word-break: break-word; }
+    .no-prompt { color: var(--txt3); font-style: italic; }
+    video { width: 100%; max-height: 400px; border-radius: 8px; background: #000; margin-top: 12px; display: block; cursor: pointer; }
 
     /* ── Stat cards ── */
     .stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px; }
@@ -111,32 +121,32 @@
     .loading { text-align: center; padding: 48px; color: var(--txt3); }
     .mono { font-family: 'SFMono-Regular', Consolas, monospace; font-size: 12px; }
     .credits-val { font-weight: 600; color: var(--accent2); }
-    .key-result { background: var(--panel); border: 1px solid var(--border2); border-radius: 8px; padding: 12px 14px; margin-top: 14px; word-break: break-all; font-family: monospace; font-size: 13px; color: var(--green); display: none; }
+    .runtime-val { color: var(--sky); font-size: 12px; }
 
     /* ── Toast ── */
-    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--panel); border: 1px solid var(--border2); border-radius: 8px; padding: 12px 18px; font-size: 13px; z-index: 300; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 360px; }
+    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--panel); border: 1px solid var(--border2); border-radius: 8px; padding: 12px 18px; font-size: 13px; z-index: 300; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 380px; }
     .toast.show { opacity: 1; }
   </style>
 </head>
 <body>
 
-<!-- ── Login ─────────────────────────────────────────────────────── -->
+<!-- ── Login ── -->
 <div id="login-screen">
   <div class="login-box">
     <h1>Piigu <span style="color:var(--accent2)">Admin</span></h1>
-    <p>請輸入管理員密碼以繼續</p>
+    <p>Enter your admin password to continue</p>
     <input type="password" id="pw-input" placeholder="Admin password" autocomplete="current-password" />
-    <button class="btn btn-primary" onclick="doLogin()">登入</button>
-    <div id="login-error">密碼錯誤，請重試</div>
+    <button class="btn btn-primary" onclick="doLogin()">Sign In</button>
+    <div id="login-error">Incorrect password, please try again</div>
   </div>
 </div>
 
-<!-- ── App ───────────────────────────────────────────────────────── -->
+<!-- ── App ── -->
 <div id="app">
   <div class="topbar">
     <div class="topbar-brand">Piigu <span>Admin</span></div>
     <div class="topbar-spacer"></div>
-    <button class="logout-btn" onclick="doLogout()">登出</button>
+    <button class="logout-btn" onclick="doLogout()">Sign Out</button>
   </div>
 
   <div class="tabs">
@@ -151,9 +161,9 @@
       <div class="panel">
         <div class="panel-header">
           <div class="panel-title">API Keys</div>
-          <button class="btn btn-inline btn-sm" onclick="openNewKeyModal()">+ 新建 Key</button>
+          <button class="btn btn-inline btn-sm" onclick="openNewKeyModal()">+ New Key</button>
         </div>
-        <div id="keys-table-wrap"><div class="loading">載入中...</div></div>
+        <div id="keys-table-wrap"><div class="loading">Loading...</div></div>
       </div>
     </div>
 
@@ -165,10 +175,10 @@
         </div>
         <div class="filter-row">
           <select id="jobs-key-filter" onchange="loadJobs(1)">
-            <option value="">所有 Keys</option>
+            <option value="">All Keys</option>
           </select>
           <select id="jobs-status-filter" onchange="loadJobs(1)">
-            <option value="">所有狀態</option>
+            <option value="">All Statuses</option>
             <option value="queued">Queued</option>
             <option value="processing">Processing</option>
             <option value="completed">Completed</option>
@@ -176,7 +186,7 @@
             <option value="cancelled">Cancelled</option>
           </select>
         </div>
-        <div id="jobs-table-wrap"><div class="loading">載入中...</div></div>
+        <div id="jobs-table-wrap"><div class="loading">Loading...</div></div>
         <div class="pagination" id="jobs-pagination"></div>
       </div>
     </div>
@@ -186,43 +196,64 @@
       <div class="filter-row" style="border:none;padding-left:0;padding-bottom:0;margin-bottom:16px">
         <input type="month" id="billing-month" onchange="loadBilling()" />
       </div>
-      <div id="billing-content"><div class="loading">載入中...</div></div>
+      <div id="billing-content"><div class="loading">Loading...</div></div>
     </div>
   </div>
 </div>
 
-<!-- ── New Key Modal ─────────────────────────────────────────────── -->
+<!-- ── New Key Modal ── -->
 <div class="modal-overlay" id="modal-new-key">
   <div class="modal">
-    <h2>新建 API Key</h2>
+    <h2>Create API Key</h2>
     <div class="form-field">
-      <label>名稱 / 客戶名稱</label>
+      <label>Client Name</label>
       <input type="text" id="new-key-name" placeholder="e.g. Client A" />
     </div>
     <div class="form-field">
-      <label>初始 Credits</label>
+      <label>Initial Credits</label>
       <input type="number" id="new-key-credits" value="100" min="0" step="0.01" />
     </div>
-    <div class="key-result" id="new-key-result"></div>
+    <div id="new-key-result" style="display:none">
+      <div style="font-size:12px;color:var(--green);margin-bottom:8px;font-weight:600">✓ Key created — click to copy</div>
+      <div class="key-box">
+        <span class="key-val" id="new-key-value"></span>
+        <button class="btn btn-sm btn-outline" onclick="copyNewKey()">Copy</button>
+      </div>
+    </div>
     <div class="modal-actions">
-      <button class="btn btn-outline" onclick="closeModal('modal-new-key')">關閉</button>
-      <button class="btn btn-inline" id="create-key-btn" onclick="createKey()">建立</button>
+      <button class="btn btn-outline" onclick="closeModal('modal-new-key')">Close</button>
+      <button class="btn btn-inline" id="create-key-btn" onclick="createKey()">Create</button>
     </div>
   </div>
 </div>
 
-<!-- ── Topup Modal ───────────────────────────────────────────────── -->
+<!-- ── Topup Modal ── -->
 <div class="modal-overlay" id="modal-topup">
   <div class="modal">
-    <h2>充值 Credits</h2>
+    <h2>Top Up Credits</h2>
     <div class="form-field">
-      <label>充值金額</label>
+      <label>Amount to Add</label>
       <input type="number" id="topup-amount" value="100" min="0.01" step="0.01" />
     </div>
     <input type="hidden" id="topup-key-hash" />
     <div class="modal-actions">
-      <button class="btn btn-outline" onclick="closeModal('modal-topup')">取消</button>
-      <button class="btn btn-green" onclick="doTopup()">確認充值</button>
+      <button class="btn btn-outline" onclick="closeModal('modal-topup')">Cancel</button>
+      <button class="btn btn-green" onclick="doTopup()">Confirm Top Up</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── View Key Modal ── -->
+<div class="modal-overlay" id="modal-view-key">
+  <div class="modal">
+    <h2>API Key</h2>
+    <div style="font-size:13px;color:var(--txt2);margin-bottom:14px">Click the key to reveal, or copy directly.</div>
+    <div class="key-box">
+      <span class="key-val key-hidden" id="view-key-value" onclick="this.classList.remove('key-hidden')"></span>
+      <button class="btn btn-sm btn-outline" onclick="copyViewKey()">Copy</button>
+    </div>
+    <div class="modal-actions" style="margin-top:20px">
+      <button class="btn btn-outline" onclick="closeModal('modal-view-key')">Close</button>
     </div>
   </div>
 </div>
@@ -235,8 +266,10 @@ let adminToken = localStorage.getItem('adminToken') || '';
 let allKeys = [];
 let jobsPage = 1;
 let expandedJobId = null;
+let viewKeyValue = '';
+let newKeyValue = '';
 
-// ── Auth ──────────────────────────────────────────────────────────
+// ── Auth ──
 function doLogin() {
   const pw = document.getElementById('pw-input').value.trim();
   if (!pw) return;
@@ -252,10 +285,7 @@ function doLogin() {
       document.getElementById('login-error').style.display = 'block';
     });
 }
-
-document.getElementById('pw-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') doLogin();
-});
+document.getElementById('pw-input').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
 function doLogout() {
   localStorage.removeItem('adminToken');
@@ -271,15 +301,11 @@ function showApp() {
   initApp();
 }
 
-// ── API helper ────────────────────────────────────────────────────
+// ── API helper ──
 function apiFetch(path, opts = {}) {
   return fetch(API + path, {
     ...opts,
-    headers: {
-      'X-Admin-Password': adminToken,
-      'Content-Type': 'application/json',
-      ...(opts.headers || {}),
-    },
+    headers: { 'X-Admin-Password': adminToken, 'Content-Type': 'application/json', ...(opts.headers || {}) },
   }).then(async r => {
     if (!r.ok) throw new Error(await r.text());
     return r.json();
@@ -293,23 +319,21 @@ function toast(msg) {
   setTimeout(() => el.classList.remove('show'), 3000);
 }
 
-// ── Init ──────────────────────────────────────────────────────────
+// ── Init ──
 function initApp() {
   loadKeys();
-  const now = new Date();
-  document.getElementById('billing-month').value = now.toISOString().slice(0, 7);
+  document.getElementById('billing-month').value = new Date().toISOString().slice(0, 7);
 }
 
-// Auto-login if token stored
 if (adminToken) {
-  apiFetch('/v1/admin/keys')
-    .then(showApp)
-    .catch(() => { adminToken = ''; localStorage.removeItem('adminToken'); });
+  apiFetch('/v1/admin/keys').then(showApp).catch(() => {
+    adminToken = '';
+    localStorage.removeItem('adminToken');
+  });
 }
 
-// ── Tabs ──────────────────────────────────────────────────────────
+// ── Tabs ──
 const TAB_NAMES = ['keys', 'jobs', 'billing'];
-
 function switchTab(name) {
   TAB_NAMES.forEach((t, i) => {
     document.getElementById('tab-' + t).style.display = t === name ? '' : 'none';
@@ -320,35 +344,35 @@ function switchTab(name) {
   if (name === 'billing') loadBilling();
 }
 
-// ── Keys Tab ──────────────────────────────────────────────────────
+// ── Keys Tab ──
 function loadKeys() {
   apiFetch('/v1/admin/keys').then(data => {
     allKeys = data.keys || [];
     renderKeysTable(allKeys);
-    // Populate jobs key filter
     const sel = document.getElementById('jobs-key-filter');
     const prev = sel.value;
-    sel.innerHTML = '<option value="">所有 Keys</option>';
+    sel.innerHTML = '<option value="">All Keys</option>';
     allKeys.forEach(k => {
-      sel.innerHTML += `<option value="${k.key_hash}" ${k.key_hash === prev ? 'selected' : ''}>${k.name}</option>`;
+      sel.innerHTML += `<option value="${k.key_hash}" ${k.key_hash === prev ? 'selected' : ''}>${esc(k.name)}</option>`;
     });
   }).catch(e => {
-    document.getElementById('keys-table-wrap').innerHTML = `<div class="empty">載入失敗: ${e.message}</div>`;
+    document.getElementById('keys-table-wrap').innerHTML = `<div class="empty">Failed to load: ${e.message}</div>`;
   });
 }
 
 function renderKeysTable(keys) {
   if (!keys.length) {
-    document.getElementById('keys-table-wrap').innerHTML = '<div class="empty">尚無 API Keys，點擊「新建 Key」開始</div>';
+    document.getElementById('keys-table-wrap').innerHTML = '<div class="empty">No API keys yet. Click "New Key" to create one.</div>';
     return;
   }
   let html = `<table><thead><tr>
-    <th>名稱</th><th>Credits 餘額</th><th>已用 Credits</th><th>Total Jobs</th><th>完成</th><th>失敗</th><th>狀態</th><th>操作</th>
+    <th>Name</th><th>Credits</th><th>Used</th><th>Total</th><th>Done</th><th>Failed</th><th>Status</th><th>Actions</th>
   </tr></thead><tbody>`;
   keys.forEach(k => {
     const statusBadge = k.disabled
-      ? '<span class="badge badge-red">停用</span>'
-      : '<span class="badge badge-green">啟用</span>';
+      ? '<span class="badge badge-red">Disabled</span>'
+      : '<span class="badge badge-green">Active</span>';
+    const hasKey = k.raw_key && k.raw_key.length > 0;
     html += `<tr>
       <td>
         <strong>${esc(k.name)}</strong><br>
@@ -360,10 +384,11 @@ function renderKeysTable(keys) {
       <td>${k.completed_jobs}</td>
       <td>${k.failed_jobs}</td>
       <td>${statusBadge}</td>
-      <td>
-        <button class="btn btn-sm btn-green" onclick="openTopup('${k.key_hash}')">充值</button>
-        <button class="btn btn-sm ${k.disabled ? 'btn-inline' : 'btn-danger'}" style="margin-left:6px"
-          onclick="toggleDisable('${k.key_hash}',${!k.disabled})">${k.disabled ? '啟用' : '停用'}</button>
+      <td style="white-space:nowrap">
+        ${hasKey ? `<button class="btn btn-sm btn-outline" onclick="openViewKey('${esc(k.raw_key)}')">View Key</button>` : ''}
+        <button class="btn btn-sm btn-green" style="margin-left:4px" onclick="openTopup('${k.key_hash}')">Top Up</button>
+        <button class="btn btn-sm ${k.disabled ? 'btn-inline' : 'btn-danger'}" style="margin-left:4px"
+          onclick="toggleDisable('${k.key_hash}',${!k.disabled})">${k.disabled ? 'Enable' : 'Disable'}</button>
       </td>
     </tr>`;
   });
@@ -371,62 +396,70 @@ function renderKeysTable(keys) {
   document.getElementById('keys-table-wrap').innerHTML = html;
 }
 
+// ── New Key Modal ──
 function openNewKeyModal() {
   document.getElementById('new-key-name').value = '';
   document.getElementById('new-key-credits').value = '100';
   document.getElementById('new-key-result').style.display = 'none';
-  document.getElementById('new-key-result').textContent = '';
+  document.getElementById('new-key-value').textContent = '';
   document.getElementById('create-key-btn').style.display = 'inline-flex';
   document.getElementById('modal-new-key').classList.add('open');
 }
-
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
 function createKey() {
   const name = document.getElementById('new-key-name').value.trim();
   const credits = parseFloat(document.getElementById('new-key-credits').value) || 0;
-  if (!name) { toast('請輸入名稱'); return; }
+  if (!name) { toast('Please enter a name'); return; }
   apiFetch('/v1/admin/keys', { method: 'POST', body: JSON.stringify({ name, credits }) })
     .then(data => {
-      const resultEl = document.getElementById('new-key-result');
-      resultEl.textContent = data.api_key;
-      resultEl.style.display = 'block';
+      newKeyValue = data.api_key;
+      document.getElementById('new-key-value').textContent = data.api_key;
+      document.getElementById('new-key-result').style.display = 'block';
       document.getElementById('create-key-btn').style.display = 'none';
-      navigator.clipboard?.writeText(data.api_key).then(() => toast('Key 已複製到剪貼簿'));
+      navigator.clipboard?.writeText(data.api_key).then(() => toast('API key copied to clipboard'));
       loadKeys();
     })
-    .catch(e => toast('建立失敗: ' + e.message));
+    .catch(e => toast('Failed to create: ' + e.message));
+}
+function copyNewKey() {
+  navigator.clipboard?.writeText(newKeyValue).then(() => toast('Copied!'));
 }
 
+// ── View Key Modal ──
+function openViewKey(rawKey) {
+  viewKeyValue = rawKey;
+  const el = document.getElementById('view-key-value');
+  el.textContent = rawKey;
+  el.classList.add('key-hidden');
+  document.getElementById('modal-view-key').classList.add('open');
+}
+function copyViewKey() {
+  navigator.clipboard?.writeText(viewKeyValue).then(() => toast('Copied!'));
+}
+
+// ── Topup Modal ──
 function openTopup(keyHash) {
   document.getElementById('topup-key-hash').value = keyHash;
   document.getElementById('topup-amount').value = '100';
   document.getElementById('modal-topup').classList.add('open');
 }
-
 function doTopup() {
   const keyHash = document.getElementById('topup-key-hash').value;
   const amount = parseFloat(document.getElementById('topup-amount').value);
-  if (!amount || amount <= 0) { toast('請輸入正確金額'); return; }
+  if (!amount || amount <= 0) { toast('Please enter a valid amount'); return; }
   apiFetch(`/v1/admin/keys/${keyHash}/topup`, { method: 'PATCH', body: JSON.stringify({ add_credits: amount }) })
-    .then(() => {
-      closeModal('modal-topup');
-      toast(`充值 ${amount} credits 成功`);
-      loadKeys();
-    })
-    .catch(e => toast('充值失敗: ' + e.message));
+    .then(() => { closeModal('modal-topup'); toast(`${amount} credits added`); loadKeys(); })
+    .catch(e => toast('Failed: ' + e.message));
 }
 
 function toggleDisable(keyHash, disabled) {
   apiFetch(`/v1/admin/keys/${keyHash}/disable`, { method: 'PATCH', body: JSON.stringify({ disabled }) })
-    .then(() => {
-      toast(disabled ? 'Key 已停用' : 'Key 已啟用');
-      loadKeys();
-    })
-    .catch(e => toast('操作失敗: ' + e.message));
+    .then(() => { toast(disabled ? 'Key disabled' : 'Key enabled'); loadKeys(); })
+    .catch(e => toast('Failed: ' + e.message));
 }
 
-// ── Jobs Tab ──────────────────────────────────────────────────────
+// ── Jobs Tab ──
 function loadJobs(page) {
   jobsPage = page || jobsPage;
   const keyHash = document.getElementById('jobs-key-filter').value;
@@ -434,62 +467,68 @@ function loadJobs(page) {
   let url = `/v1/admin/jobs?page=${jobsPage}&limit=20`;
   if (keyHash) url += `&key_hash=${encodeURIComponent(keyHash)}`;
   if (status) url += `&status=${encodeURIComponent(status)}`;
-
-  document.getElementById('jobs-table-wrap').innerHTML = '<div class="loading">載入中...</div>';
-  apiFetch(url)
-    .then(data => renderJobsTable(data))
-    .catch(e => {
-      document.getElementById('jobs-table-wrap').innerHTML = `<div class="empty">載入失敗: ${e.message}</div>`;
-    });
+  document.getElementById('jobs-table-wrap').innerHTML = '<div class="loading">Loading...</div>';
+  apiFetch(url).then(renderJobsTable).catch(e => {
+    document.getElementById('jobs-table-wrap').innerHTML = `<div class="empty">Failed to load: ${e.message}</div>`;
+  });
 }
 
 function statusBadge(s) {
-  const map = {
-    queued: 'badge-amber', processing: 'badge-sky', postprocessing: 'badge-sky',
-    completed: 'badge-green', failed: 'badge-red', cancelled: 'badge-gray',
-  };
+  const map = { queued: 'badge-amber', processing: 'badge-sky', postprocessing: 'badge-sky', completed: 'badge-green', failed: 'badge-red', cancelled: 'badge-gray' };
   return `<span class="badge ${map[s] || 'badge-gray'}">${s}</span>`;
 }
 
 function fmtTime(ts) {
   if (!ts) return '—';
-  return new Date(ts * 1000).toLocaleString('zh-TW', { hour12: false });
+  return new Date(ts * 1000).toLocaleString('en-US', { hour12: false, year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+
+function fmtRuntime(secs) {
+  if (secs == null) return '—';
+  if (secs < 60) return `${secs}s`;
+  return `${Math.floor(secs / 60)}m ${Math.round(secs % 60)}s`;
 }
 
 function renderJobsTable(data) {
   const jobs = data.jobs || [];
   if (!jobs.length) {
-    document.getElementById('jobs-table-wrap').innerHTML = '<div class="empty">沒有符合條件的 Jobs</div>';
+    document.getElementById('jobs-table-wrap').innerHTML = '<div class="empty">No jobs found</div>';
     document.getElementById('jobs-pagination').innerHTML = '';
     return;
   }
 
   let html = `<table><thead><tr>
-    <th>Job ID</th><th>Key</th><th>Position</th><th>Duration</th><th>Credits</th><th>狀態</th><th>建立時間</th>
+    <th>Job ID</th><th>Key</th><th>Position</th><th>Duration</th><th>Runtime</th><th>Credits</th><th>Status</th><th>Created</th>
   </tr></thead><tbody>`;
 
   jobs.forEach(j => {
     html += `<tr class="expandable" onclick="toggleJobDetail('${j.job_id}')">
-      <td class="mono">${j.job_id}</td>
+      <td class="mono" style="font-size:11px">${j.job_id}</td>
       <td>${esc(j.key_name || j.api_key_hash.slice(0, 10) + '…')}</td>
       <td>${j.position}</td>
       <td>${j.duration}s</td>
+      <td class="runtime-val">${fmtRuntime(j.runtime_seconds)}</td>
       <td class="credits-val">${Number(j.credits_charged).toFixed(4)}</td>
       <td>${statusBadge(j.status)}</td>
-      <td style="color:var(--txt2)">${fmtTime(j.created_at)}</td>
+      <td style="color:var(--txt2);font-size:12px">${fmtTime(j.created_at)}</td>
     </tr>
     <tr class="detail-row" id="detail-${j.job_id}" style="display:none">
-      <td colspan="7">
+      <td colspan="8">
         <div class="detail-grid">
-          <div class="detail-item"><label>Prompt</label><value>${esc(j.prompt || '—')}</value></div>
+          <div class="detail-item full">
+            <label>Prompt</label>
+            ${j.prompt ? `<div class="prompt-text">${esc(j.prompt)}</div>` : '<div class="no-prompt">No prompt</div>'}
+          </div>
           <div class="detail-item"><label>Seed</label><value>${j.seed}</value></div>
-          <div class="detail-item"><label>完成時間</label><value>${fmtTime(j.completed_at)}</value></div>
-          <div class="detail-item"><label>Callback URL</label><value>${esc(j.callback_url || '—')}</value></div>
-          <div class="detail-item"><label>API Key Hash</label><value class="mono">${j.api_key_hash.slice(0, 20)}…</value></div>
+          <div class="detail-item"><label>Started</label><value>${fmtTime(j.started_at)}</value></div>
+          <div class="detail-item"><label>Completed</label><value>${fmtTime(j.completed_at)}</value></div>
+          <div class="detail-item"><label>Runtime</label><value class="runtime-val">${fmtRuntime(j.runtime_seconds)}</value></div>
+          <div class="detail-item"><label>Callback URL</label><value>${j.callback_url ? `<a href="${esc(j.callback_url)}" style="color:var(--accent2)">${esc(j.callback_url)}</a>` : '—'}</value></div>
+          <div class="detail-item"><label>Key Hash</label><value class="mono" style="color:var(--txt3)">${j.api_key_hash.slice(0, 24)}…</value></div>
         </div>
         ${j.video_url
-          ? `<video controls preload="metadata" src="${esc(j.video_url)}"></video>`
-          : '<div style="color:var(--txt3);font-size:13px;padding:4px 0">尚無影片</div>'
+          ? `<video controls preload="metadata" src="${esc(j.video_url)}" title="Click to play"></video>`
+          : '<div style="color:var(--txt3);font-size:13px;padding:4px 0">No video available</div>'
         }
       </td>
     </tr>`;
@@ -498,13 +537,12 @@ function renderJobsTable(data) {
   html += '</tbody></table>';
   document.getElementById('jobs-table-wrap').innerHTML = html;
 
-  // Pagination
   const total = data.total;
   const pages = Math.ceil(total / 20);
-  let pg = `<span class="page-info">共 ${total} 筆</span>`;
-  if (jobsPage > 1) pg += `<button class="btn btn-outline btn-sm" onclick="loadJobs(${jobsPage - 1})">← 上一頁</button>`;
-  pg += `<span class="page-info">${jobsPage} / ${pages}</span>`;
-  if (jobsPage < pages) pg += `<button class="btn btn-outline btn-sm" onclick="loadJobs(${jobsPage + 1})">下一頁 →</button>`;
+  let pg = `<span class="page-info">${total} total</span>`;
+  if (jobsPage > 1) pg += `<button class="btn btn-outline btn-sm" onclick="loadJobs(${jobsPage - 1})">← Prev</button>`;
+  pg += `<span class="page-info">Page ${jobsPage} / ${pages}</span>`;
+  if (jobsPage < pages) pg += `<button class="btn btn-outline btn-sm" onclick="loadJobs(${jobsPage + 1})">Next →</button>`;
   document.getElementById('jobs-pagination').innerHTML = pg;
 }
 
@@ -520,57 +558,50 @@ function toggleJobDetail(jobId) {
   expandedJobId = isOpen ? null : jobId;
 }
 
-// ── Billing Tab ───────────────────────────────────────────────────
+// ── Billing Tab ──
 function loadBilling() {
   const month = document.getElementById('billing-month').value;
-  document.getElementById('billing-content').innerHTML = '<div class="loading">載入中...</div>';
+  document.getElementById('billing-content').innerHTML = '<div class="loading">Loading...</div>';
   apiFetch(`/v1/admin/billing?month=${month}`)
-    .then(data => renderBilling(data))
+    .then(renderBilling)
     .catch(e => {
-      document.getElementById('billing-content').innerHTML = `<div class="empty">載入失敗: ${e.message}</div>`;
+      document.getElementById('billing-content').innerHTML = `<div class="empty">Failed to load: ${e.message}</div>`;
     });
 }
 
 function renderBilling(data) {
   const activeCount = data.clients.filter(c => c.status === 'active').length;
   let html = `<div class="stat-cards">
-    <div class="stat-card"><div class="label">本月 Jobs</div><div class="value">${data.total_jobs_this_month}</div></div>
-    <div class="stat-card"><div class="label">Credits 已用</div><div class="value credits-val">${Number(data.total_credits_used).toFixed(4)}</div></div>
-    <div class="stat-card"><div class="label">啟用客戶</div><div class="value">${activeCount}</div></div>
-    <div class="stat-card"><div class="label">總客戶數</div><div class="value">${data.total_clients}</div></div>
+    <div class="stat-card"><div class="label">Jobs This Month</div><div class="value">${data.total_jobs_this_month}</div></div>
+    <div class="stat-card"><div class="label">Credits Used</div><div class="value credits-val">${Number(data.total_credits_used).toFixed(4)}</div></div>
+    <div class="stat-card"><div class="label">Active Clients</div><div class="value">${activeCount}</div></div>
+    <div class="stat-card"><div class="label">Total Clients</div><div class="value">${data.total_clients}</div></div>
   </div>
   <div class="panel"><table><thead><tr>
-    <th>名稱</th><th>本月 Jobs</th><th>Credits 餘額</th><th>累計已用</th><th>完成</th><th>失敗</th><th>狀態</th>
+    <th>Name</th><th>Jobs This Month</th><th>Credits Balance</th><th>Total Used</th><th>Completed</th><th>Failed</th><th>Status</th>
   </tr></thead><tbody>`;
 
   data.clients.forEach(c => {
-    const stBadge = c.status === 'active'
-      ? '<span class="badge badge-green">啟用</span>'
-      : '<span class="badge badge-red">停用</span>';
+    const st = c.status === 'active'
+      ? '<span class="badge badge-green">Active</span>'
+      : '<span class="badge badge-red">Disabled</span>';
     html += `<tr>
-      <td>
-        <strong>${esc(c.name)}</strong><br>
-        <span class="mono" style="color:var(--txt3)">${c.key_hash_prefix}…</span>
-      </td>
+      <td><strong>${esc(c.name)}</strong><br><span class="mono" style="color:var(--txt3)">${c.key_hash_prefix}…</span></td>
       <td>${c.jobs_this_month}</td>
       <td class="credits-val">${Number(c.credits).toFixed(4)}</td>
       <td style="color:var(--txt2)">${Number(c.credits_used).toFixed(4)}</td>
       <td>${c.completed_jobs}</td>
       <td>${c.failed_jobs}</td>
-      <td>${stBadge}</td>
+      <td>${st}</td>
     </tr>`;
   });
   html += '</tbody></table></div>';
   document.getElementById('billing-content').innerHTML = html;
 }
 
-// ── Utils ─────────────────────────────────────────────────────────
+// ── Utils ──
 function esc(str) {
-  return String(str ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 </script>
 </body>
