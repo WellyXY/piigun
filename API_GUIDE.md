@@ -18,7 +18,7 @@ Parrot API is an image-to-video generation service. Upload a portrait image, sel
 
 ### Basic Information
 
-- **API Base URL**: `https://your-service.railway.app`
+- **API Base URL**: `https://www.racoonn.me`
 - **Authentication**: `X-API-Key` header
 - **Request Format**: JSON
 - **Video Output**: MP4, 25 fps, 1024×1536
@@ -77,7 +77,7 @@ Convert a static image into a video.
 ### Request Example
 
 ```bash
-curl -X POST 'https://your-service.railway.app/v1/generate' \
+curl -X POST 'https://www.racoonn.me/v1/generate' \
   -H 'X-API-Key: pk_your_key_here' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -115,7 +115,7 @@ Check the status of a generation job.
 ### Request Example
 
 ```bash
-curl -X GET 'https://your-service.railway.app/v1/jobs/job_abc123def456' \
+curl -X GET 'https://www.racoonn.me/v1/jobs/job_abc123def456' \
   -H 'X-API-Key: pk_your_key_here'
 ```
 
@@ -179,7 +179,7 @@ curl -X GET 'https://your-service.railway.app/v1/jobs/job_abc123def456' \
 #### Step 1: Submit a Job
 
 ```bash
-curl -X POST 'https://your-service.railway.app/v1/generate' \
+curl -X POST 'https://www.racoonn.me/v1/generate' \
   -H 'X-API-Key: pk_your_key_here' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -200,7 +200,7 @@ curl -X POST 'https://your-service.railway.app/v1/generate' \
 #### Step 2: Poll for Status
 
 ```bash
-curl 'https://your-service.railway.app/v1/jobs/job_abc123def456' \
+curl 'https://www.racoonn.me/v1/jobs/job_abc123def456' \
   -H 'X-API-Key: pk_your_key_here'
 ```
 
@@ -217,7 +217,7 @@ import requests
 import time
 
 API_KEY = "pk_your_key_here"
-BASE_URL = "https://your-service.railway.app"
+BASE_URL = "https://www.racoonn.me"
 
 headers = {
     "X-API-Key": API_KEY,
@@ -274,7 +274,7 @@ print(f"Video ready: {video_url}")
 const fetch = require('node-fetch');
 
 const API_KEY = 'pk_your_key_here';
-const BASE_URL = 'https://your-service.railway.app';
+const BASE_URL = 'https://www.racoonn.me';
 
 const headers = {
   'X-API-Key': API_KEY,
