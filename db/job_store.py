@@ -1,6 +1,6 @@
 """
-PostgreSQL persistence for job records.
-Used by the gateway (create + fallback read) and worker (complete/fail write).
+PostgreSQL persistence for job records and API key management.
+Used by the gateway (create + fallback read) and worker (complete/fail/deduct write).
 """
 from __future__ import annotations
 
@@ -33,6 +33,24 @@ CREATE TABLE IF NOT EXISTS jobs (
 );
 """
 
+CREATE_API_KEYS_SQL = """
+CREATE TABLE IF NOT EXISTS api_keys (
+    key_hash        TEXT PRIMARY KEY,
+    name            TEXT NOT NULL,
+    created_at      DOUBLE PRECISION NOT NULL,
+    disabled        BOOLEAN NOT NULL DEFAULT FALSE,
+    credits         NUMERIC(12,4) NOT NULL DEFAULT 0,
+    credits_used    NUMERIC(12,4) NOT NULL DEFAULT 0,
+    total_jobs      INTEGER NOT NULL DEFAULT 0,
+    completed_jobs  INTEGER NOT NULL DEFAULT 0,
+    failed_jobs     INTEGER NOT NULL DEFAULT 0
+);
+"""
+
+ADD_CREDITS_CHARGED_SQL = """
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS credits_charged NUMERIC(12,4) DEFAULT 0;
+"""
+
 
 async def get_pool() -> asyncpg.Pool:
     global _pool
@@ -42,6 +60,8 @@ async def get_pool() -> asyncpg.Pool:
         _pool = await asyncpg.create_pool(settings.DATABASE_URL, min_size=2, max_size=10)
         async with _pool.acquire() as conn:
             await conn.execute(CREATE_TABLE_SQL)
+            await conn.execute(CREATE_API_KEYS_SQL)
+            await conn.execute(ADD_CREDITS_CHARGED_SQL)
         logger.info("[DB] PostgreSQL pool ready")
     return _pool
 
@@ -52,6 +72,8 @@ async def close_pool():
         await _pool.close()
         _pool = None
 
+
+# ── Job CRUD ──────────────────────────────────────────────────────────────────
 
 async def save_job(job: dict):
     """Insert a new job record (called by gateway on job creation)."""
@@ -118,3 +140,194 @@ async def get_job(job_id: str) -> Optional[dict]:
     if not row:
         return None
     return dict(row)
+
+
+async def get_jobs_paginated(
+    page: int,
+    limit: int,
+    key_hash: Optional[str] = None,
+    status: Optional[str] = None,
+) -> tuple[list[dict], int]:
+    """Admin: paginated job list with optional filters."""
+    pool = await get_pool()
+    conditions = []
+    params: list = []
+    idx = 1
+
+    if key_hash:
+        conditions.append(f"j.api_key_hash = ${idx}")
+        params.append(key_hash)
+        idx += 1
+    if status:
+        conditions.append(f"j.status = ${idx}")
+        params.append(status)
+        idx += 1
+
+    where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+
+    async with pool.acquire() as conn:
+        total = await conn.fetchval(
+            f"SELECT COUNT(*) FROM jobs j {where}", *params
+        )
+        rows = await conn.fetch(
+            f"""
+            SELECT j.*, k.name as key_name
+            FROM jobs j
+            LEFT JOIN api_keys k ON j.api_key_hash = k.key_hash
+            {where}
+            ORDER BY j.created_at DESC
+            LIMIT ${idx} OFFSET ${idx + 1}
+            """,
+            *params, limit, (page - 1) * limit,
+        )
+    return [dict(r) for r in rows], total
+
+
+async def get_key_jobs(
+    key_hash: str,
+    page: int,
+    limit: int,
+    status: Optional[str] = None,
+) -> tuple[list[dict], int]:
+    """User: paginated job list for a specific key."""
+    pool = await get_pool()
+    conditions = ["api_key_hash = $1"]
+    params: list = [key_hash]
+    idx = 2
+
+    if status:
+        conditions.append(f"status = ${idx}")
+        params.append(status)
+        idx += 1
+
+    where = "WHERE " + " AND ".join(conditions)
+
+    async with pool.acquire() as conn:
+        total = await conn.fetchval(
+            f"SELECT COUNT(*) FROM jobs {where}", *params
+        )
+        rows = await conn.fetch(
+            f"""
+            SELECT job_id, position, duration, status,
+                   COALESCE(credits_charged, 0) as credits_charged,
+                   video_url, created_at, completed_at, prompt, seed, callback_url
+            FROM jobs {where}
+            ORDER BY created_at DESC
+            LIMIT ${idx} OFFSET ${idx + 1}
+            """,
+            *params, limit, (page - 1) * limit,
+        )
+    return [dict(r) for r in rows], total
+
+
+# ── API Key CRUD ──────────────────────────────────────────────────────────────
+
+async def upsert_api_key(key_hash: str, name: str, created_at: float, credits: float = 0.0):
+    """Insert a new API key. No-op if already exists."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        await conn.execute(
+            """
+            INSERT INTO api_keys (key_hash, name, created_at, credits)
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT (key_hash) DO NOTHING
+            """,
+            key_hash, name, created_at, credits,
+        )
+
+
+async def get_api_key(key_hash: str) -> Optional[dict]:
+    """Fetch key metadata from PostgreSQL."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT * FROM api_keys WHERE key_hash = $1", key_hash
+        )
+    if not row:
+        return None
+    return dict(row)
+
+
+async def list_api_keys() -> list[dict]:
+    """List all API keys ordered by creation date (newest first)."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            "SELECT * FROM api_keys ORDER BY created_at DESC"
+        )
+    return [dict(r) for r in rows]
+
+
+async def update_api_key(
+    key_hash: str,
+    *,
+    disabled: Optional[bool] = None,
+    add_credits: Optional[float] = None,
+):
+    """Admin: disable/enable key or top up credits."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        if disabled is not None:
+            await conn.execute(
+                "UPDATE api_keys SET disabled = $1 WHERE key_hash = $2",
+                disabled, key_hash,
+            )
+        if add_credits is not None:
+            await conn.execute(
+                "UPDATE api_keys SET credits = credits + $1 WHERE key_hash = $2",
+                add_credits, key_hash,
+            )
+
+
+async def check_credits(key_hash: str) -> float:
+    """Return current credits balance. Returns -1.0 if key not found in PG."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT credits FROM api_keys WHERE key_hash = $1", key_hash
+        )
+    if not row:
+        return -1.0
+    return float(row["credits"])
+
+
+async def deduct_credits(key_hash: str, amount: float, job_id: str) -> bool:
+    """
+    Atomically deduct credits on job completion.
+    Returns True if successful, False if balance is insufficient.
+    Also writes credits_charged to the jobs table.
+    """
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            row = await conn.fetchrow(
+                """
+                UPDATE api_keys
+                SET credits = credits - $1,
+                    credits_used = credits_used + $1,
+                    completed_jobs = completed_jobs + 1
+                WHERE key_hash = $2 AND credits >= $1
+                RETURNING credits
+                """,
+                amount, key_hash,
+            )
+            if row is None:
+                return False
+            await conn.execute(
+                "UPDATE jobs SET credits_charged = $1 WHERE job_id = $2",
+                amount, job_id,
+            )
+            return True
+
+
+async def increment_api_key_jobs(key_hash: str, field: str):
+    """Increment total_jobs or failed_jobs counter."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        # Only allow safe field names
+        if field not in ("total_jobs", "failed_jobs", "completed_jobs"):
+            return
+        await conn.execute(
+            f"UPDATE api_keys SET {field} = {field} + 1 WHERE key_hash = $1",
+            key_hash,
+        )
