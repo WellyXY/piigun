@@ -83,8 +83,18 @@ class InferenceEngine:
 
         # Always use default prompt regardless of user input
         effective_prompt = DEFAULT_PROMPTS.get(position, position.replace("_", " "))
-        # Audio: use user's custom text if provided, otherwise fall back to default preset
-        effective_audio = audio_description.strip() if (include_audio and audio_description.strip()) else (DEFAULT_AUDIO.get(position, "") if include_audio else "")
+        # Audio: wrap user's custom text in the standard scene format, or use default preset
+        if include_audio:
+            user_audio = audio_description.strip()
+            if user_audio:
+                effective_audio = (
+                    f'rhythmic bouncing sounds, skin contact, she moans with a deep primal intensity, '
+                    f'gasping and saying : "{user_audio}" heavy panting and sharp exhales punctuating each downward thrust.'
+                )
+            else:
+                effective_audio = DEFAULT_AUDIO.get(position, "")
+        else:
+            effective_audio = ""
 
         t0 = time.time()
         logger.info(f"[GPU {self.gpu_id}] Calling server: position={position}, frames={num_frames}, audio={include_audio}")

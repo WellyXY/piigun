@@ -72,9 +72,7 @@ Convert a static image into a video.
 | `missionary` | Missionary |
 | `doggy` | Doggy style |
 | `blow_job` | Blow job |
-| `handjob` | Hand job |
 | `masturbation` | Masturbation |
-| `lift_clothes` | Lift clothes |
 
 ### Request Example
 
