@@ -148,6 +148,12 @@ async def health_check():
     return {"status": "ok", "service": settings.PROJECT_NAME}
 
 
+@app.get("/admin", include_in_schema=False)
+async def admin_ui():
+    path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "admin.html")
+    return FileResponse(path, media_type="text/html")
+
+
 @app.get("/test")
 async def test_ui():
     import os
