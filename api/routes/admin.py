@@ -143,6 +143,60 @@ async def billing_report(month: Optional[str] = None):
     }
 
 
+@router.post("/simulate-complete")
+async def simulate_job_complete(job_id: str):
+    """
+    TEST ONLY: Simulate a job completing successfully.
+    Marks job as completed in Redis and deducts credits from PG.
+    Used for integration testing when GPU is unavailable.
+    """
+    r = await get_redis()
+    from task_queue.job_manager import get_job, update_job
+    from api.models import JobStatus
+
+    job = await get_job(r, job_id)
+    if not job:
+        # Try PostgreSQL fallback
+        from db import job_store
+        pg_job = await job_store.get_job(job_id)
+        if not pg_job:
+            raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
+        # Simulate using PG data
+        key_hash = pg_job["api_key_hash"]
+        duration = int(pg_job.get("duration", 10))
+    else:
+        key_hash = job["api_key_hash"]
+        duration = int(job.get("duration", 10))
+
+    now = time.time()
+    started_at = now - duration  # pretend it ran for `duration` seconds
+
+    # Update Redis
+    await update_job(r, job_id,
+        status=JobStatus.COMPLETED.value,
+        progress=1.0,
+        started_at=started_at,
+        completed_at=now,
+        video_url="https://example.com/simulated-video.mp4",
+    )
+
+    # Update PostgreSQL
+    from db import job_store
+    await job_store.complete_job(job_id, "https://example.com/simulated-video.mp4", now, started_at)
+
+    # Deduct credits
+    cost = duration * __import__("api.config", fromlist=["settings"]).settings.CREDITS_PER_SECOND
+    ok = await job_store.deduct_credits(key_hash, cost, job_id)
+
+    return {
+        "job_id": job_id,
+        "simulated": True,
+        "credits_deducted": cost,
+        "deduction_ok": ok,
+        "key_hash": key_hash[:12] + "...",
+    }
+
+
 @router.post("/cleanup")
 async def cleanup_expired_jobs(max_age_hours: int = 24):
     """Remove completed/failed jobs older than max_age_hours from Redis."""
