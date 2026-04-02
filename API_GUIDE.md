@@ -1,4 +1,4 @@
-# Parrot API — Complete Usage Guide
+# Piigu API — Complete Usage Guide
 
 ## 📋 Table of Contents
 
@@ -14,7 +14,7 @@
 
 ## 🌟 API Overview
 
-Parrot API is an image-to-video generation service. Upload a portrait image, select a position, and receive a generated video — optionally with audio.
+Piigu API is an image-to-video generation service. Upload a portrait image, select a position, and receive a generated video — optionally with audio.
 
 ### Basic Information
 
@@ -188,7 +188,7 @@ curl -X POST 'https://www.racoonn.me/v1/generate' \
     "duration": 10,
     "include_audio": true,
     "audio_description": "moan softly and whisper yes",
-    "callback_url": "https://your-server.com/webhook"
+    "callback_url": "https://your-domain.com/webhook"
   }'
 ```
 
@@ -371,7 +371,7 @@ async function waitForCompletion(jobId, timeout = 120000) {
 Set `callback_url` to receive instant notification on completion instead of polling.
 
 ```json
-{ "callback_url": "https://your-server.com/parrot-webhook" }
+{ "callback_url": "https://your-domain.com/webhook" }
 ```
 
 Webhook payload:
@@ -427,4 +427,4 @@ A: Check the `error` field in the job status response. Common causes: inaccessib
 A: Jobs are processed sequentially per GPU. Submit multiple jobs and they will queue automatically.
 
 **Q: How do I get an API key?**
-A: Contact the Parrot team directly.
+A: Contact the Piigu team directly.
