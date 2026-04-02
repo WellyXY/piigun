@@ -81,10 +81,10 @@ class InferenceEngine:
         raw = duration * 25
         num_frames = ((raw - 1 + 7) // 8) * 8 + 1  # 5s→121, 10s→249
 
-        # Use full default prompt if user didn't provide one
-        effective_prompt = prompt.strip() or DEFAULT_PROMPTS.get(position, position.replace("_", " "))
-        # Auto-fill audio description from presets when audio is enabled
-        effective_audio = audio_description.strip() if audio_description else (DEFAULT_AUDIO.get(position, "") if include_audio else "")
+        # Always use default prompt regardless of user input
+        effective_prompt = DEFAULT_PROMPTS.get(position, position.replace("_", " "))
+        # Audio: use user's custom text if provided, otherwise fall back to default preset
+        effective_audio = audio_description.strip() if (include_audio and audio_description.strip()) else (DEFAULT_AUDIO.get(position, "") if include_audio else "")
 
         t0 = time.time()
         logger.info(f"[GPU {self.gpu_id}] Calling server: position={position}, frames={num_frames}, audio={include_audio}")
