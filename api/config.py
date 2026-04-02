@@ -35,6 +35,12 @@ class Settings:
     JOB_TTL_HOURS: int = int(os.getenv("JOB_TTL_HOURS", "168"))  # 7 days in Redis
     QUEUE_EXPIRE_SECONDS: int = int(os.getenv("QUEUE_EXPIRE_SECONDS", "300"))
 
+    # ── Admin ──
+    ADMIN_PASSWORD: str = os.getenv("ADMIN_PASSWORD", "")
+
+    # ── Credits ──
+    CREDITS_PER_SECOND: float = float(os.getenv("CREDITS_PER_SECOND", "0.035"))
+
     # ── Post-processing (worker only) ──
     POSTPROCESS_ENABLED: bool = os.getenv("POSTPROCESS_ENABLED", "true").lower() == "true"
     RIFE_DIR: str = os.getenv("RIFE_DIR", "/raid/training/ai-toolkit/Practical-RIFE")
