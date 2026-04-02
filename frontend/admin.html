@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Piigu Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #07090f; --surface: #0d1117; --panel: #111827;
+      --border: #1e2738; --border2: #263248;
+      --accent: #6366f1; --accent2: #818cf8; --glow: rgba(99,102,241,.18);
+      --green: #10b981; --red: #f43f5e; --amber: #f59e0b; --sky: #38bdf8;
+      --txt1: #f1f5f9; --txt2: #94a3b8; --txt3: #475569; --radius: 12px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--txt1); font-family: 'Inter', sans-serif; font-size: 14px; min-height: 100vh; }
+
+    /* ── Login ── */
+    #login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .login-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 40px; width: 360px; }
+    .login-box h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+    .login-box p { color: var(--txt2); margin-bottom: 24px; font-size: 13px; }
+    .login-box input { width: 100%; padding: 10px 14px; background: var(--panel); border: 1px solid var(--border2); border-radius: 8px; color: var(--txt1); font-size: 14px; margin-bottom: 12px; outline: none; font-family: inherit; }
+    .login-box input:focus { border-color: var(--accent); }
+    #login-error { color: var(--red); font-size: 13px; margin-top: 8px; display: none; }
+
+    /* ── Buttons ── */
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; transition: opacity .15s; font-family: inherit; }
+    .btn:hover { opacity: .85; }
+    .btn-primary { background: var(--accent); color: #fff; width: 100%; justify-content: center; }
+    .btn-sm { padding: 5px 12px; font-size: 12px; }
+    .btn-outline { background: transparent; border: 1px solid var(--border2); color: var(--txt2); }
+    .btn-danger { background: var(--red); color: #fff; }
+    .btn-green { background: var(--green); color: #fff; }
+    .btn-inline { background: var(--accent); color: #fff; }
+
+    /* ── App shell ── */
+    #app { display: none; flex-direction: column; min-height: 100vh; }
+    .topbar { height: 56px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 12px; background: rgba(13,17,23,.9); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 100; }
+    .topbar-brand { font-weight: 700; font-size: 16px; letter-spacing: -.3px; }
+    .topbar-brand span { color: var(--accent2); }
+    .topbar-spacer { flex: 1; }
+    .logout-btn { background: transparent; border: 1px solid var(--border2); color: var(--txt2); padding: 5px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: inherit; }
+    .logout-btn:hover { color: var(--txt1); }
+
+    /* ── Tabs ── */
+    .tabs { display: flex; gap: 4px; padding: 16px 24px 0; border-bottom: 1px solid var(--border); }
+    .tab { padding: 10px 18px; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--txt2); border: 1px solid transparent; border-bottom: none; transition: all .15s; user-select: none; }
+    .tab.active { background: var(--surface); color: var(--txt1); border-color: var(--border); }
+    .tab:hover:not(.active) { color: var(--txt1); }
+
+    /* ── Content ── */
+    .content { padding: 24px; flex: 1; }
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+    .panel-title { font-weight: 600; font-size: 15px; }
+
+    /* ── Table ── */
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 10px 16px; font-size: 11px; font-weight: 600; color: var(--txt2); text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--border); background: var(--panel); }
+    td { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr.expandable { cursor: pointer; }
+    tr.expandable:hover > td { background: rgba(255,255,255,.02); }
+
+    /* ── Badges ── */
+    .badge { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+    .badge-green { background: rgba(16,185,129,.15); color: var(--green); }
+    .badge-red { background: rgba(244,63,94,.15); color: var(--red); }
+    .badge-amber { background: rgba(245,158,11,.15); color: var(--amber); }
+    .badge-sky { background: rgba(56,189,248,.15); color: var(--sky); }
+    .badge-gray { background: rgba(148,163,184,.1); color: var(--txt2); }
+
+    /* ── Modal ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.65); display: none; align-items: center; justify-content: center; z-index: 200; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius); padding: 28px; width: 420px; }
+    .modal h2 { font-size: 17px; font-weight: 600; margin-bottom: 20px; }
+    .form-field { margin-bottom: 14px; }
+    .form-field label { display: block; font-size: 12px; font-weight: 500; color: var(--txt2); margin-bottom: 6px; }
+    .form-field input { width: 100%; padding: 9px 13px; background: var(--panel); border: 1px solid var(--border2); border-radius: 8px; color: var(--txt1); font-size: 14px; outline: none; font-family: inherit; }
+    .form-field input:focus { border-color: var(--accent); }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+    .modal-actions .btn { width: auto; }
+
+    /* ── Detail row ── */
+    .detail-row > td { background: rgba(17,24,39,.8); padding: 16px 20px; cursor: default; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+    .detail-item label { display: block; font-size: 11px; color: var(--txt2); margin-bottom: 3px; font-weight: 500; text-transform: uppercase; letter-spacing: .04em; }
+    .detail-item value { font-size: 13px; word-break: break-all; line-height: 1.5; }
+    video { width: 100%; max-height: 380px; border-radius: 8px; background: #000; margin-top: 12px; display: block; }
+
+    /* ── Stat cards ── */
+    .stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; }
+    .stat-card .label { font-size: 12px; color: var(--txt2); margin-bottom: 6px; font-weight: 500; }
+    .stat-card .value { font-size: 26px; font-weight: 700; }
+
+    /* ── Pagination ── */
+    .pagination { display: flex; gap: 8px; align-items: center; justify-content: flex-end; padding: 14px 20px; border-top: 1px solid var(--border); }
+    .page-info { color: var(--txt2); font-size: 13px; }
+
+    /* ── Filter row ── */
+    .filter-row { display: flex; gap: 10px; padding: 12px 20px; border-bottom: 1px solid var(--border); align-items: center; flex-wrap: wrap; }
+    .filter-row select, .filter-row input[type="month"] { padding: 7px 12px; background: var(--panel); border: 1px solid var(--border2); border-radius: 8px; color: var(--txt1); font-size: 13px; outline: none; font-family: inherit; }
+
+    /* ── Misc ── */
+    .empty { text-align: center; padding: 48px; color: var(--txt2); }
+    .loading { text-align: center; padding: 48px; color: var(--txt3); }
+    .mono { font-family: 'SFMono-Regular', Consolas, monospace; font-size: 12px; }
+    .credits-val { font-weight: 600; color: var(--accent2); }
+    .key-result { background: var(--panel); border: 1px solid var(--border2); border-radius: 8px; padding: 12px 14px; margin-top: 14px; word-break: break-all; font-family: monospace; font-size: 13px; color: var(--green); display: none; }
+
+    /* ── Toast ── */
+    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--panel); border: 1px solid var(--border2); border-radius: 8px; padding: 12px 18px; font-size: 13px; z-index: 300; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 360px; }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<!-- ── Login ─────────────────────────────────────────────────────── -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Piigu <span style="color:var(--accent2)">Admin</span></h1>
+    <p>請輸入管理員密碼以繼續</p>
+    <input type="password" id="pw-input" placeholder="Admin password" autocomplete="current-password" />
+    <button class="btn btn-primary" onclick="doLogin()">登入</button>
+    <div id="login-error">密碼錯誤，請重試</div>
+  </div>
+</div>
+
+<!-- ── App ───────────────────────────────────────────────────────── -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-brand">Piigu <span>Admin</span></div>
+    <div class="topbar-spacer"></div>
+    <button class="logout-btn" onclick="doLogout()">登出</button>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('keys')">API Keys</div>
+    <div class="tab" onclick="switchTab('jobs')">Jobs</div>
+    <div class="tab" onclick="switchTab('billing')">Billing</div>
+  </div>
+
+  <div class="content">
+    <!-- Keys Tab -->
+    <div id="tab-keys">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">API Keys</div>
+          <button class="btn btn-inline btn-sm" onclick="openNewKeyModal()">+ 新建 Key</button>
+        </div>
+        <div id="keys-table-wrap"><div class="loading">載入中...</div></div>
+      </div>
+    </div>
+
+    <!-- Jobs Tab -->
+    <div id="tab-jobs" style="display:none">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Generation Jobs</div>
+        </div>
+        <div class="filter-row">
+          <select id="jobs-key-filter" onchange="loadJobs(1)">
+            <option value="">所有 Keys</option>
+          </select>
+          <select id="jobs-status-filter" onchange="loadJobs(1)">
+            <option value="">所有狀態</option>
+            <option value="queued">Queued</option>
+            <option value="processing">Processing</option>
+            <option value="completed">Completed</option>
+            <option value="failed">Failed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div id="jobs-table-wrap"><div class="loading">載入中...</div></div>
+        <div class="pagination" id="jobs-pagination"></div>
+      </div>
+    </div>
+
+    <!-- Billing Tab -->
+    <div id="tab-billing" style="display:none">
+      <div class="filter-row" style="border:none;padding-left:0;padding-bottom:0;margin-bottom:16px">
+        <input type="month" id="billing-month" onchange="loadBilling()" />
+      </div>
+      <div id="billing-content"><div class="loading">載入中...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── New Key Modal ─────────────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-new-key">
+  <div class="modal">
+    <h2>新建 API Key</h2>
+    <div class="form-field">
+      <label>名稱 / 客戶名稱</label>
+      <input type="text" id="new-key-name" placeholder="e.g. Client A" />
+    </div>
+    <div class="form-field">
+      <label>初始 Credits</label>
+      <input type="number" id="new-key-credits" value="100" min="0" step="0.01" />
+    </div>
+    <div class="key-result" id="new-key-result"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-new-key')">關閉</button>
+      <button class="btn btn-inline" id="create-key-btn" onclick="createKey()">建立</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Topup Modal ───────────────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-topup">
+  <div class="modal">
+    <h2>充值 Credits</h2>
+    <div class="form-field">
+      <label>充值金額</label>
+      <input type="number" id="topup-amount" value="100" min="0.01" step="0.01" />
+    </div>
+    <input type="hidden" id="topup-key-hash" />
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-topup')">取消</button>
+      <button class="btn btn-green" onclick="doTopup()">確認充值</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+let adminToken = localStorage.getItem('adminToken') || '';
+let allKeys = [];
+let jobsPage = 1;
+let expandedJobId = null;
+
+// ── Auth ──────────────────────────────────────────────────────────
+function doLogin() {
+  const pw = document.getElementById('pw-input').value.trim();
+  if (!pw) return;
+  adminToken = pw;
+  apiFetch('/v1/admin/keys')
+    .then(() => {
+      localStorage.setItem('adminToken', adminToken);
+      document.getElementById('login-error').style.display = 'none';
+      showApp();
+    })
+    .catch(() => {
+      adminToken = '';
+      document.getElementById('login-error').style.display = 'block';
+    });
+}
+
+document.getElementById('pw-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+function doLogout() {
+  localStorage.removeItem('adminToken');
+  adminToken = '';
+  location.reload();
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  const app = document.getElementById('app');
+  app.style.display = 'flex';
+  app.style.flexDirection = 'column';
+  initApp();
+}
+
+// ── API helper ────────────────────────────────────────────────────
+function apiFetch(path, opts = {}) {
+  return fetch(API + path, {
+    ...opts,
+    headers: {
+      'X-Admin-Password': adminToken,
+      'Content-Type': 'application/json',
+      ...(opts.headers || {}),
+    },
+  }).then(async r => {
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
+  });
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+function initApp() {
+  loadKeys();
+  const now = new Date();
+  document.getElementById('billing-month').value = now.toISOString().slice(0, 7);
+}
+
+// Auto-login if token stored
+if (adminToken) {
+  apiFetch('/v1/admin/keys')
+    .then(showApp)
+    .catch(() => { adminToken = ''; localStorage.removeItem('adminToken'); });
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────
+const TAB_NAMES = ['keys', 'jobs', 'billing'];
+
+function switchTab(name) {
+  TAB_NAMES.forEach((t, i) => {
+    document.getElementById('tab-' + t).style.display = t === name ? '' : 'none';
+    document.querySelectorAll('.tab')[i].classList.toggle('active', t === name);
+  });
+  if (name === 'keys') loadKeys();
+  if (name === 'jobs') loadJobs(1);
+  if (name === 'billing') loadBilling();
+}
+
+// ── Keys Tab ──────────────────────────────────────────────────────
+function loadKeys() {
+  apiFetch('/v1/admin/keys').then(data => {
+    allKeys = data.keys || [];
+    renderKeysTable(allKeys);
+    // Populate jobs key filter
+    const sel = document.getElementById('jobs-key-filter');
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">所有 Keys</option>';
+    allKeys.forEach(k => {
+      sel.innerHTML += `<option value="${k.key_hash}" ${k.key_hash === prev ? 'selected' : ''}>${k.name}</option>`;
+    });
+  }).catch(e => {
+    document.getElementById('keys-table-wrap').innerHTML = `<div class="empty">載入失敗: ${e.message}</div>`;
+  });
+}
+
+function renderKeysTable(keys) {
+  if (!keys.length) {
+    document.getElementById('keys-table-wrap').innerHTML = '<div class="empty">尚無 API Keys，點擊「新建 Key」開始</div>';
+    return;
+  }
+  let html = `<table><thead><tr>
+    <th>名稱</th><th>Credits 餘額</th><th>已用 Credits</th><th>Total Jobs</th><th>完成</th><th>失敗</th><th>狀態</th><th>操作</th>
+  </tr></thead><tbody>`;
+  keys.forEach(k => {
+    const statusBadge = k.disabled
+      ? '<span class="badge badge-red">停用</span>'
+      : '<span class="badge badge-green">啟用</span>';
+    html += `<tr>
+      <td>
+        <strong>${esc(k.name)}</strong><br>
+        <span class="mono" style="color:var(--txt3)">${k.key_hash.slice(0, 12)}…</span>
+      </td>
+      <td class="credits-val">${Number(k.credits).toFixed(4)}</td>
+      <td style="color:var(--txt2)">${Number(k.credits_used).toFixed(4)}</td>
+      <td>${k.total_jobs}</td>
+      <td>${k.completed_jobs}</td>
+      <td>${k.failed_jobs}</td>
+      <td>${statusBadge}</td>
+      <td>
+        <button class="btn btn-sm btn-green" onclick="openTopup('${k.key_hash}')">充值</button>
+        <button class="btn btn-sm ${k.disabled ? 'btn-inline' : 'btn-danger'}" style="margin-left:6px"
+          onclick="toggleDisable('${k.key_hash}',${!k.disabled})">${k.disabled ? '啟用' : '停用'}</button>
+      </td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  document.getElementById('keys-table-wrap').innerHTML = html;
+}
+
+function openNewKeyModal() {
+  document.getElementById('new-key-name').value = '';
+  document.getElementById('new-key-credits').value = '100';
+  document.getElementById('new-key-result').style.display = 'none';
+  document.getElementById('new-key-result').textContent = '';
+  document.getElementById('create-key-btn').style.display = 'inline-flex';
+  document.getElementById('modal-new-key').classList.add('open');
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function createKey() {
+  const name = document.getElementById('new-key-name').value.trim();
+  const credits = parseFloat(document.getElementById('new-key-credits').value) || 0;
+  if (!name) { toast('請輸入名稱'); return; }
+  apiFetch('/v1/admin/keys', { method: 'POST', body: JSON.stringify({ name, credits }) })
+    .then(data => {
+      const resultEl = document.getElementById('new-key-result');
+      resultEl.textContent = data.api_key;
+      resultEl.style.display = 'block';
+      document.getElementById('create-key-btn').style.display = 'none';
+      navigator.clipboard?.writeText(data.api_key).then(() => toast('Key 已複製到剪貼簿'));
+      loadKeys();
+    })
+    .catch(e => toast('建立失敗: ' + e.message));
+}
+
+function openTopup(keyHash) {
+  document.getElementById('topup-key-hash').value = keyHash;
+  document.getElementById('topup-amount').value = '100';
+  document.getElementById('modal-topup').classList.add('open');
+}
+
+function doTopup() {
+  const keyHash = document.getElementById('topup-key-hash').value;
+  const amount = parseFloat(document.getElementById('topup-amount').value);
+  if (!amount || amount <= 0) { toast('請輸入正確金額'); return; }
+  apiFetch(`/v1/admin/keys/${keyHash}/topup`, { method: 'PATCH', body: JSON.stringify({ add_credits: amount }) })
+    .then(() => {
+      closeModal('modal-topup');
+      toast(`充值 ${amount} credits 成功`);
+      loadKeys();
+    })
+    .catch(e => toast('充值失敗: ' + e.message));
+}
+
+function toggleDisable(keyHash, disabled) {
+  apiFetch(`/v1/admin/keys/${keyHash}/disable`, { method: 'PATCH', body: JSON.stringify({ disabled }) })
+    .then(() => {
+      toast(disabled ? 'Key 已停用' : 'Key 已啟用');
+      loadKeys();
+    })
+    .catch(e => toast('操作失敗: ' + e.message));
+}
+
+// ── Jobs Tab ──────────────────────────────────────────────────────
+function loadJobs(page) {
+  jobsPage = page || jobsPage;
+  const keyHash = document.getElementById('jobs-key-filter').value;
+  const status = document.getElementById('jobs-status-filter').value;
+  let url = `/v1/admin/jobs?page=${jobsPage}&limit=20`;
+  if (keyHash) url += `&key_hash=${encodeURIComponent(keyHash)}`;
+  if (status) url += `&status=${encodeURIComponent(status)}`;
+
+  document.getElementById('jobs-table-wrap').innerHTML = '<div class="loading">載入中...</div>';
+  apiFetch(url)
+    .then(data => renderJobsTable(data))
+    .catch(e => {
+      document.getElementById('jobs-table-wrap').innerHTML = `<div class="empty">載入失敗: ${e.message}</div>`;
+    });
+}
+
+function statusBadge(s) {
+  const map = {
+    queued: 'badge-amber', processing: 'badge-sky', postprocessing: 'badge-sky',
+    completed: 'badge-green', failed: 'badge-red', cancelled: 'badge-gray',
+  };
+  return `<span class="badge ${map[s] || 'badge-gray'}">${s}</span>`;
+}
+
+function fmtTime(ts) {
+  if (!ts) return '—';
+  return new Date(ts * 1000).toLocaleString('zh-TW', { hour12: false });
+}
+
+function renderJobsTable(data) {
+  const jobs = data.jobs || [];
+  if (!jobs.length) {
+    document.getElementById('jobs-table-wrap').innerHTML = '<div class="empty">沒有符合條件的 Jobs</div>';
+    document.getElementById('jobs-pagination').innerHTML = '';
+    return;
+  }
+
+  let html = `<table><thead><tr>
+    <th>Job ID</th><th>Key</th><th>Position</th><th>Duration</th><th>Credits</th><th>狀態</th><th>建立時間</th>
+  </tr></thead><tbody>`;
+
+  jobs.forEach(j => {
+    html += `<tr class="expandable" onclick="toggleJobDetail('${j.job_id}')">
+      <td class="mono">${j.job_id}</td>
+      <td>${esc(j.key_name || j.api_key_hash.slice(0, 10) + '…')}</td>
+      <td>${j.position}</td>
+      <td>${j.duration}s</td>
+      <td class="credits-val">${Number(j.credits_charged).toFixed(4)}</td>
+      <td>${statusBadge(j.status)}</td>
+      <td style="color:var(--txt2)">${fmtTime(j.created_at)}</td>
+    </tr>
+    <tr class="detail-row" id="detail-${j.job_id}" style="display:none">
+      <td colspan="7">
+        <div class="detail-grid">
+          <div class="detail-item"><label>Prompt</label><value>${esc(j.prompt || '—')}</value></div>
+          <div class="detail-item"><label>Seed</label><value>${j.seed}</value></div>
+          <div class="detail-item"><label>完成時間</label><value>${fmtTime(j.completed_at)}</value></div>
+          <div class="detail-item"><label>Callback URL</label><value>${esc(j.callback_url || '—')}</value></div>
+          <div class="detail-item"><label>API Key Hash</label><value class="mono">${j.api_key_hash.slice(0, 20)}…</value></div>
+        </div>
+        ${j.video_url
+          ? `<video controls preload="metadata" src="${esc(j.video_url)}"></video>`
+          : '<div style="color:var(--txt3);font-size:13px;padding:4px 0">尚無影片</div>'
+        }
+      </td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  document.getElementById('jobs-table-wrap').innerHTML = html;
+
+  // Pagination
+  const total = data.total;
+  const pages = Math.ceil(total / 20);
+  let pg = `<span class="page-info">共 ${total} 筆</span>`;
+  if (jobsPage > 1) pg += `<button class="btn btn-outline btn-sm" onclick="loadJobs(${jobsPage - 1})">← 上一頁</button>`;
+  pg += `<span class="page-info">${jobsPage} / ${pages}</span>`;
+  if (jobsPage < pages) pg += `<button class="btn btn-outline btn-sm" onclick="loadJobs(${jobsPage + 1})">下一頁 →</button>`;
+  document.getElementById('jobs-pagination').innerHTML = pg;
+}
+
+function toggleJobDetail(jobId) {
+  const row = document.getElementById('detail-' + jobId);
+  if (!row) return;
+  if (expandedJobId && expandedJobId !== jobId) {
+    const prev = document.getElementById('detail-' + expandedJobId);
+    if (prev) prev.style.display = 'none';
+  }
+  const isOpen = row.style.display !== 'none';
+  row.style.display = isOpen ? 'none' : '';
+  expandedJobId = isOpen ? null : jobId;
+}
+
+// ── Billing Tab ───────────────────────────────────────────────────
+function loadBilling() {
+  const month = document.getElementById('billing-month').value;
+  document.getElementById('billing-content').innerHTML = '<div class="loading">載入中...</div>';
+  apiFetch(`/v1/admin/billing?month=${month}`)
+    .then(data => renderBilling(data))
+    .catch(e => {
+      document.getElementById('billing-content').innerHTML = `<div class="empty">載入失敗: ${e.message}</div>`;
+    });
+}
+
+function renderBilling(data) {
+  const activeCount = data.clients.filter(c => c.status === 'active').length;
+  let html = `<div class="stat-cards">
+    <div class="stat-card"><div class="label">本月 Jobs</div><div class="value">${data.total_jobs_this_month}</div></div>
+    <div class="stat-card"><div class="label">Credits 已用</div><div class="value credits-val">${Number(data.total_credits_used).toFixed(4)}</div></div>
+    <div class="stat-card"><div class="label">啟用客戶</div><div class="value">${activeCount}</div></div>
+    <div class="stat-card"><div class="label">總客戶數</div><div class="value">${data.total_clients}</div></div>
+  </div>
+  <div class="panel"><table><thead><tr>
+    <th>名稱</th><th>本月 Jobs</th><th>Credits 餘額</th><th>累計已用</th><th>完成</th><th>失敗</th><th>狀態</th>
+  </tr></thead><tbody>`;
+
+  data.clients.forEach(c => {
+    const stBadge = c.status === 'active'
+      ? '<span class="badge badge-green">啟用</span>'
+      : '<span class="badge badge-red">停用</span>';
+    html += `<tr>
+      <td>
+        <strong>${esc(c.name)}</strong><br>
+        <span class="mono" style="color:var(--txt3)">${c.key_hash_prefix}…</span>
+      </td>
+      <td>${c.jobs_this_month}</td>
+      <td class="credits-val">${Number(c.credits).toFixed(4)}</td>
+      <td style="color:var(--txt2)">${Number(c.credits_used).toFixed(4)}</td>
+      <td>${c.completed_jobs}</td>
+      <td>${c.failed_jobs}</td>
+      <td>${stBadge}</td>
+    </tr>`;
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('billing-content').innerHTML = html;
+}
+
+// ── Utils ─────────────────────────────────────────────────────────
+function esc(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+</script>
+</body>
+</html>
