@@ -652,25 +652,21 @@
       <div class="section-label">Parameters</div>
       <div style="display:flex;flex-direction:column;gap:12px">
         <div class="field">
-          <label>Prompt <span style="color:var(--txt3)">(optional)</span></label>
-          <div class="input-wrap">
-            <textarea id="prompt" rows="2" placeholder="Describe the motion or scene…"></textarea>
-          </div>
-        </div>
-
-        <div class="field">
           <div class="toggle-row">
             <div class="toggle-info">
               <span class="toggle-label">Audio / Dirty Talk</span>
-              <span class="toggle-sub">Add vocal description to the prompt</span>
+              <span class="toggle-sub">Character vocal audio</span>
             </div>
             <label class="toggle-switch">
               <input type="checkbox" id="audio-toggle" />
               <span class="toggle-track"></span>
             </label>
           </div>
-          <!-- audio prompt is auto-filled from server presets, not shown -->
-          <input type="hidden" id="audio-prompt" value="" />
+          <div id="audio-desc-wrap" style="display:none;margin-top:10px">
+            <div class="input-wrap">
+              <textarea id="audio-description" rows="2" placeholder="What you want the character to say… (leave empty for default)"></textarea>
+            </div>
+          </div>
         </div>
         <div class="field">
           <label>Duration</label>
@@ -819,7 +815,9 @@
   });
 
   // ── Audio toggle ── (presets handled server-side, nothing to show)
-  $('audio-toggle').addEventListener('change', () => {});
+  $('audio-toggle').addEventListener('change', () => {
+    $('audio-desc-wrap').style.display = $('audio-toggle').checked ? 'block' : 'none';
+  });
 
   // ── Duration ──
   $('duration').addEventListener('input', () => {
@@ -876,9 +874,9 @@
         body: JSON.stringify({
           image_base64:  imageBase64,
           position:      pos,
-          prompt:        $('prompt').value.trim(),
           duration:      dur,
           include_audio: $('audio-toggle').checked,
+          audio_description: $('audio-toggle').checked ? $('audio-description').value.trim() : '',
         }),
       });
       const data = await res.json();

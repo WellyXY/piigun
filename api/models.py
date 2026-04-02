@@ -28,7 +28,7 @@ class JobStatus(str, Enum):
 class GenerateRequest(BaseModel):
     image_url: Optional[str] = None
     image_base64: Optional[str] = None
-    position: str
+    position: str = "cowgirl"
     prompt: Optional[str] = ""
     duration: int = Field(default=10, ge=5, le=10)
     seed: Optional[int] = None
