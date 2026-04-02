@@ -75,6 +75,25 @@ async def _write_pg_fail(job_id: str, error: str, completed_at: float, started_a
         logger.warning(f"PG fail write failed for {job_id}: {e}")
 
 
+async def _deduct_credits(job: dict):
+    """Atomically deduct credits from api_keys table on successful job completion."""
+    if not settings.DATABASE_URL:
+        return
+    key_hash = job.get("api_key_hash", "")
+    duration = int(job.get("duration", 10))
+    job_id = job.get("job_id", "")
+    if not key_hash or not job_id:
+        return
+    cost = duration * settings.CREDITS_PER_SECOND
+    try:
+        from db import job_store
+        ok = await job_store.deduct_credits(key_hash, cost, job_id)
+        if not ok:
+            logger.warning(f"Credits deduct returned False for {job_id} (balance may be 0)")
+    except Exception as e:
+        logger.warning(f"Credits deduct failed for {job_id}: {e}")
+
+
 async def process_job(engine: InferenceEngine, r: aioredis.Redis, job_id: str):
     job = await get_job(r, job_id)
     if not job:
@@ -150,6 +169,7 @@ async def process_job(engine: InferenceEngine, r: aioredis.Redis, job_id: str):
                          video_url=video_url)
 
         await _write_pg_complete(job_id, video_url, completed_at, started_at)
+        await _deduct_credits(job)
 
         from api.auth import increment_usage
         await increment_usage(job["api_key_hash"], "completed_jobs")
