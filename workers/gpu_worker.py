@@ -107,7 +107,7 @@ async def process_job(engine: InferenceEngine, r: aioredis.Redis, job_id: str):
         import tempfile
         import httpx as _httpx
         image_url = job.get("image_url") or job.get("image_path", "")
-        tmp_image = tempfile.NamedTemporaryFile(suffix=".jpg", delete=False)
+        tmp_image = tempfile.NamedTemporaryFile(suffix=".webp", delete=False)
         tmp_image_path = tmp_image.name
         tmp_image.close()
         async with _httpx.AsyncClient(timeout=30) as _client:

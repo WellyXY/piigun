@@ -77,8 +77,9 @@ class InferenceEngine:
         Returns (output_path, generation_time_seconds).
         """
         # LTX-Video requires frames = 8n+1. Round up to nearest valid count.
-        raw = duration * 30
-        num_frames = ((raw - 1 + 7) // 8) * 8 + 1  # 5s→153, 10s→305
+        # Pod runs at 25fps (frame_rate default in server.py/config.py)
+        raw = duration * 25
+        num_frames = ((raw - 1 + 7) // 8) * 8 + 1  # 5s→121, 10s→249
 
         # Use full default prompt if user didn't provide one
         effective_prompt = prompt.strip() or DEFAULT_PROMPTS.get(position, position.replace("_", " "))
