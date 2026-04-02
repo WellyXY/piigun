@@ -62,6 +62,22 @@ async def submit_generate(
     key_hash: str = Depends(verify_api_key),
 ):
     r = await get_redis()
+
+    # ── Credits check ──────────────────────────────────────────────────────
+    cost = req.duration * settings.CREDITS_PER_SECOND
+    if settings.DATABASE_URL:
+        from db import job_store as _js
+        available = await _js.check_credits(key_hash)
+        if available >= 0 and available < cost:
+            raise HTTPException(
+                status_code=402,
+                detail={
+                    "error": "Insufficient credits",
+                    "required": round(cost, 4),
+                    "available": round(available, 4),
+                },
+            )
+
     local_path = await _save_input_image(req)
 
     # Upload image to R2 so RunPod worker can access it
