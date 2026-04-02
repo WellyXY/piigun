@@ -105,3 +105,92 @@ class WebhookPayload(BaseModel):
     video_url: Optional[str] = None
     error: Optional[str] = None
     metadata: Optional[JobMetadata] = None
+
+
+# ── Credits ──────────────────────────────────────────────────────
+
+class InsufficientCreditsResponse(BaseModel):
+    error: str = "Insufficient credits"
+    required: float
+    available: float
+
+
+class AccountUsageResponse(BaseModel):
+    api_key: str
+    credits: float
+    credits_used: float
+    total_jobs: int
+    completed_jobs: int
+    failed_jobs: int
+    month: str
+
+
+class AccountJobItem(BaseModel):
+    job_id: str
+    position: str
+    duration: int
+    status: str
+    credits_charged: float
+    video_url: Optional[str] = None
+    created_at: float
+    completed_at: Optional[float] = None
+    prompt: str
+    seed: int
+    callback_url: str
+
+
+class AccountJobsResponse(BaseModel):
+    jobs: list[AccountJobItem]
+    total: int
+    page: int
+    limit: int
+
+
+# ── Admin ─────────────────────────────────────────────────────────
+
+class AdminKeyItem(BaseModel):
+    key_hash: str
+    name: str
+    created_at: float
+    disabled: bool
+    credits: float
+    credits_used: float
+    total_jobs: int
+    completed_jobs: int
+    failed_jobs: int
+
+
+class AdminJobItem(BaseModel):
+    job_id: str
+    key_name: Optional[str] = None
+    api_key_hash: str
+    position: str
+    duration: int
+    status: str
+    credits_charged: float
+    video_url: Optional[str] = None
+    created_at: float
+    completed_at: Optional[float] = None
+    prompt: str
+    seed: int
+    callback_url: str
+
+
+class AdminJobsResponse(BaseModel):
+    jobs: list[AdminJobItem]
+    total: int
+    page: int
+    limit: int
+
+
+class CreateKeyRequest(BaseModel):
+    name: str
+    credits: float = 0.0
+
+
+class TopUpRequest(BaseModel):
+    add_credits: float
+
+
+class DisableKeyRequest(BaseModel):
+    disabled: bool
