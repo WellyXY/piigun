@@ -880,7 +880,7 @@
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || JSON.stringify(data));
+      if (!res.ok) throw new Error(typeof data.detail === 'object' && data.detail !== null ? JSON.stringify(data.detail) : (data.detail || JSON.stringify(data)));
 
       card.querySelector('.aj-id').textContent = data.job_id;
       cardLog(card, `Queued · #${data.position_in_queue} · ~${data.estimated_wait_seconds}s`);

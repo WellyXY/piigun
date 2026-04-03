@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field, model_validator
 
 
 AVAILABLE_POSITIONS = [
-    "blow_job", "cowgirl", "doggy",
+    "blow_job", "cowgirl", "doggy", "lift_clothes",
     "masturbation", "missionary", "reverse_cowgirl",
 ]
 
