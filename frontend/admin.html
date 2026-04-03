@@ -84,6 +84,11 @@
     .form-field input:focus { border-color: var(--accent); }
     .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
     .modal-actions .btn { width: auto; }
+    .modal-header { margin-bottom: 20px; }
+    .modal-title { font-size: 17px; font-weight: 600; }
+    .modal-body { margin-bottom: 4px; }
+    .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+    .modal-footer .btn { width: auto; }
 
     /* ── Key reveal box ── */
     .key-box { background: var(--panel); border: 1px solid var(--border2); border-radius: 8px; padding: 10px 14px; margin-top: 12px; display: flex; align-items: center; gap: 10px; }
@@ -153,6 +158,7 @@
     <div class="tab active" onclick="switchTab('keys')">API Keys</div>
     <div class="tab" onclick="switchTab('jobs')">Jobs</div>
     <div class="tab" onclick="switchTab('billing')">Billing</div>
+    <div class="tab" onclick="switchTab('training')">Training</div>
   </div>
 
   <div class="content">
@@ -197,6 +203,103 @@
         <input type="month" id="billing-month" onchange="loadBilling()" />
       </div>
       <div id="billing-content"><div class="loading">Loading...</div></div>
+    </div>
+
+    <!-- Training Tab -->
+    <div id="tab-training" style="display:none">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">LoRA Training Jobs</div>
+          <button class="btn btn-inline btn-sm" onclick="openNewTrainingModal()">+ New Training Job</button>
+        </div>
+        <div id="training-table-wrap"><div class="loading">Loading...</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New Training Job Modal -->
+<div id="modal-new-training" class="modal-overlay">
+  <div class="modal" style="width:620px;max-width:95vw">
+    <div class="modal-header"><span class="modal-title">New LoRA Training Job</span></div>
+    <div class="modal-body">
+      <div class="form-field">
+        <label>Position Name</label>
+        <input id="tj-position" type="text" placeholder="e.g. cowgirl" />
+      </div>
+      <div class="form-field" style="margin-top:14px">
+        <label>Training Videos (MP4)</label>
+        <div id="video-drop-zone"
+             ondrop="handleVideoDrop(event)" ondragover="event.preventDefault()"
+             style="border:2px dashed var(--border2);padding:24px;text-align:center;border-radius:8px;cursor:pointer;color:var(--txt2)">
+          Drop MP4 files here or
+          <label style="color:#7c3aed;cursor:pointer;text-decoration:underline">
+            browse
+            <input type="file" id="video-file-input" multiple accept=".mp4" style="display:none"
+                   onchange="handleVideoFiles(this.files)">
+          </label>
+        </div>
+        <div id="video-list" style="margin-top:12px"></div>
+      </div>
+      <details style="margin-top:14px">
+        <summary style="cursor:pointer;color:var(--txt2);font-size:13px">Advanced Parameters</summary>
+        <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-field">
+            <label>Steps</label>
+            <input id="tj-steps" type="number" value="2000" min="100" max="5000" />
+          </div>
+          <div class="form-field">
+            <label>Learning Rate</label>
+            <input id="tj-lr" type="text" value="0.0001" />
+          </div>
+          <div class="form-field">
+            <label>LoRA Rank</label>
+            <input id="tj-rank" type="number" value="32" min="4" max="128" />
+          </div>
+          <div class="form-field">
+            <label>Frames</label>
+            <input id="tj-frames" type="number" value="249" min="25" max="301" />
+          </div>
+          <div class="form-field" style="grid-column:span 2">
+            <label>GPU Type</label>
+            <select id="tj-gpu" style="width:100%;padding:9px 13px;background:var(--panel);border:1px solid var(--border2);border-radius:8px;color:var(--txt1);font-size:14px;outline:none">
+              <option value="NVIDIA H100 80GB HBM3">H100 80GB (recommended)</option>
+              <option value="NVIDIA A100-SXM4-80GB">A100 80GB</option>
+              <option value="NVIDIA GeForce RTX 4090">RTX 4090 24GB</option>
+            </select>
+          </div>
+        </div>
+      </details>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-new-training')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitNewTrainingJob()">Start Training</button>
+    </div>
+  </div>
+</div>
+
+<!-- Training Job Detail Modal -->
+<div id="modal-training-detail" class="modal-overlay">
+  <div class="modal" style="width:820px;max-width:95vw">
+    <div class="modal-header">
+      <span class="modal-title" id="training-detail-title">Training Job</span>
+      <span id="training-detail-status" style="margin-left:12px;font-size:13px;color:var(--txt2)"></span>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:10px">
+        <div id="training-progress-bar-wrap" style="background:var(--panel);border-radius:4px;height:8px;width:100%">
+          <div id="training-progress-bar" style="background:#7c3aed;height:8px;border-radius:4px;width:0%;transition:width .3s"></div>
+        </div>
+        <div id="training-progress-label" style="font-size:12px;color:var(--txt2);margin-top:4px">Step 0 / 0</div>
+      </div>
+      <div id="training-log-panel"
+           style="background:#07090f;border:1px solid var(--border);padding:12px;height:280px;overflow-y:auto;font-family:monospace;font-size:12px;white-space:pre-wrap;border-radius:8px;color:#d4d4d8"></div>
+      <h4 style="margin-top:16px;font-size:13px;font-weight:600">Checkpoints</h4>
+      <div id="training-checkpoint-list" style="margin-top:8px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" onclick="cancelTrainingJob()">Cancel Job</button>
+      <button class="btn" onclick="closeModal('modal-training-detail')">Close</button>
     </div>
   </div>
 </div>
@@ -333,7 +436,7 @@ if (adminToken) {
 }
 
 // ── Tabs ──
-const TAB_NAMES = ['keys', 'jobs', 'billing'];
+const TAB_NAMES = ['keys', 'jobs', 'billing', 'training'];
 function switchTab(name) {
   TAB_NAMES.forEach((t, i) => {
     document.getElementById('tab-' + t).style.display = t === name ? '' : 'none';
@@ -342,6 +445,7 @@ function switchTab(name) {
   if (name === 'keys') loadKeys();
   if (name === 'jobs') loadJobs(1);
   if (name === 'billing') loadBilling();
+  if (name === 'training') loadTraining();
 }
 
 // ── Keys Tab ──
@@ -603,6 +707,192 @@ function renderBilling(data) {
 function esc(str) {
   return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// ── Training Tab ──────────────────────────────────────────────────────────────
+
+let pendingVideos = []; // [{file, caption}]
+let selectedTrainingJobId = null;
+let trainingLogReader = null;
+
+async function loadTraining() {
+  document.getElementById('training-table-wrap').innerHTML = '<div class="loading">Loading...</div>';
+  const jobs = await apiFetch('/v1/admin/training/jobs');
+  if (!Array.isArray(jobs) || !jobs.length) {
+    document.getElementById('training-table-wrap').innerHTML = '<div class="empty" style="padding:24px;text-align:center;color:var(--txt2)">No training jobs yet. Click "+ New Training Job" to get started.</div>';
+    return;
+  }
+  const statusColor = { done:'#10b981', failed:'#ef4444', training:'#7c3aed', preprocessing:'#f59e0b', provisioning:'#f59e0b', uploading:'#3b82f6', cancelled:'#6b7280' };
+  let html = `<table><thead><tr>
+    <th>Position</th><th>Status</th><th>Progress</th><th>GPU</th><th>Created</th><th>Actions</th>
+  </tr></thead><tbody>`;
+  jobs.forEach(j => {
+    const pct = j.total_steps > 0 ? Math.round((j.current_step / j.total_steps) * 100) : 0;
+    const col = statusColor[j.status] || '#aaa';
+    const gpu = (j.config && j.config.gpu_type_id) ? j.config.gpu_type_id.replace('NVIDIA ', '').replace(' HBM3','') : '—';
+    html += `<tr>
+      <td style="font-weight:500">${esc(j.position)}</td>
+      <td><span style="color:${col};font-weight:500">${j.status}</span></td>
+      <td>
+        <div style="background:var(--panel);border-radius:4px;height:6px;width:120px;margin-bottom:3px">
+          <div style="background:#7c3aed;height:6px;border-radius:4px;width:${pct}%"></div>
+        </div>
+        <span style="font-size:11px;color:var(--txt2)">${j.current_step}/${j.total_steps}</span>
+      </td>
+      <td style="font-size:12px;color:var(--txt2)">${esc(gpu)}</td>
+      <td style="font-size:12px;color:var(--txt2)">${fmtTime(j.created_at)}</td>
+      <td>
+        <button class="btn btn-sm btn-inline" onclick="openTrainingDetail('${j.id}')">Logs / Deploy</button>
+      </td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  document.getElementById('training-table-wrap').innerHTML = html;
+}
+
+function openNewTrainingModal() {
+  pendingVideos = [];
+  document.getElementById('video-list').innerHTML = '';
+  document.getElementById('tj-position').value = '';
+  document.getElementById('modal-new-training').classList.add('open');
+}
+
+function handleVideoDrop(e) {
+  e.preventDefault();
+  handleVideoFiles(e.dataTransfer.files);
+}
+
+function handleVideoFiles(files) {
+  for (const file of files) {
+    if (!file.name.endsWith('.mp4')) continue;
+    const caption = file.name.replace(/\.mp4$/i, '').replace(/_/g, ' ');
+    pendingVideos.push({ file, caption });
+  }
+  renderVideoList();
+}
+
+function renderVideoList() {
+  document.getElementById('video-list').innerHTML = pendingVideos.map((v, i) => `
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+      <span style="min-width:160px;font-size:12px;color:var(--txt2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(v.file.name)}</span>
+      <input type="text" value="${esc(v.caption)}" style="flex:1;padding:6px 10px;background:var(--panel);border:1px solid var(--border2);border-radius:6px;color:var(--txt1);font-size:13px;outline:none"
+             onchange="pendingVideos[${i}].caption = this.value" placeholder="Caption..." />
+      <button class="btn btn-sm" onclick="pendingVideos.splice(${i},1);renderVideoList()">✕</button>
+    </div>
+  `).join('');
+}
+
+async function submitNewTrainingJob() {
+  const position = document.getElementById('tj-position').value.trim();
+  if (!position) { alert('Position name is required'); return; }
+  if (!pendingVideos.length) { alert('Upload at least one video'); return; }
+
+  // Step 1: Reserve job_id
+  const prep = await apiFetch('/v1/admin/training/jobs/prepare', { method: 'POST' });
+  const jobId = prep.job_id;
+
+  // Step 2: Upload videos
+  showToast('Uploading videos to R2...');
+  for (const v of pendingVideos) {
+    const fd = new FormData();
+    fd.append('job_id', jobId);
+    fd.append('filename', v.file.name);
+    fd.append('file', v.file);
+    const resp = await fetch('/v1/admin/training/jobs/upload-video', {
+      method: 'POST',
+      headers: { 'X-Admin-Password': adminToken },
+      body: fd,
+    });
+    if (!resp.ok) { alert('Video upload failed: ' + v.file.name); return; }
+  }
+
+  // Step 3: Create job
+  const body = {
+    job_id: jobId,
+    position,
+    videos: pendingVideos.map(v => ({ filename: v.file.name, caption: v.caption })),
+    steps: parseInt(document.getElementById('tj-steps').value) || 2000,
+    learning_rate: parseFloat(document.getElementById('tj-lr').value) || 0.0001,
+    rank: parseInt(document.getElementById('tj-rank').value) || 32,
+    frames: parseInt(document.getElementById('tj-frames').value) || 249,
+    gpu_type_id: document.getElementById('tj-gpu').value,
+  };
+
+  const result = await apiFetch('/v1/admin/training/jobs', { method: 'POST', body: JSON.stringify(body) });
+  if (result.id) {
+    showToast('Training job started: ' + result.id.slice(0, 8) + '…');
+    closeModal('modal-new-training');
+    loadTraining();
+  } else {
+    alert('Failed to create training job: ' + JSON.stringify(result));
+  }
+}
+
+async function openTrainingDetail(jobId) {
+  selectedTrainingJobId = jobId;
+  if (trainingLogReader) { try { trainingLogReader.cancel(); } catch(e){} trainingLogReader = null; }
+
+  const job = await apiFetch('/v1/admin/training/jobs/' + jobId);
+  document.getElementById('training-detail-title').textContent = 'Training: ' + job.position;
+  document.getElementById('training-detail-status').textContent = job.status;
+  const pct = job.total_steps > 0 ? Math.round((job.current_step / job.total_steps) * 100) : 0;
+  document.getElementById('training-progress-bar').style.width = pct + '%';
+  document.getElementById('training-progress-label').textContent = `Step ${job.current_step} / ${job.total_steps}`;
+
+  // Checkpoints
+  const ckEl = document.getElementById('training-checkpoint-list');
+  if (job.checkpoints && job.checkpoints.length) {
+    ckEl.innerHTML = job.checkpoints.map(ck => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--panel);border:1px solid var(--border);border-radius:6px;margin-bottom:6px">
+        <span style="font-size:13px">${esc(ck.name)} <span style="color:var(--txt2)">(${ck.size_mb} MB, step ${ck.step})</span></span>
+        <button class="btn btn-sm btn-primary" onclick="deployTrainingCheckpoint('${jobId}','${esc(ck.name)}')">Deploy</button>
+      </div>
+    `).join('');
+  } else {
+    ckEl.innerHTML = '<p style="color:var(--txt2);font-size:13px">No checkpoints yet.</p>';
+  }
+
+  document.getElementById('modal-training-detail').classList.add('open');
+
+  // Stream logs
+  const logPanel = document.getElementById('training-log-panel');
+  logPanel.textContent = '';
+  try {
+    const resp = await fetch('/v1/admin/training/jobs/' + jobId + '/logs', {
+      headers: { 'X-Admin-Password': adminToken },
+    });
+    trainingLogReader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    (async () => {
+      while (trainingLogReader) {
+        const { value, done } = await trainingLogReader.read();
+        if (done) break;
+        logPanel.textContent += decoder.decode(value);
+        logPanel.scrollTop = logPanel.scrollHeight;
+      }
+    })();
+  } catch(e) {
+    logPanel.textContent = '[Log stream unavailable: ' + e.message + ']';
+  }
+}
+
+async function deployTrainingCheckpoint(jobId, checkpointName) {
+  if (!confirm('Deploy "' + checkpointName + '"?\nThis overwrites the current production LoRA for this position.')) return;
+  const result = await apiFetch('/v1/admin/training/jobs/' + jobId + '/deploy/' + encodeURIComponent(checkpointName), { method: 'POST' });
+  if (result.ok) {
+    showToast('Deployed to R2: ' + result.deployed + '. Restart inference server to apply.');
+  } else {
+    alert('Deploy failed: ' + JSON.stringify(result));
+  }
+}
+
+async function cancelTrainingJob() {
+  if (!selectedTrainingJobId) return;
+  if (!confirm('Cancel this training job and terminate the RunPod pod?')) return;
+  await apiFetch('/v1/admin/training/jobs/' + selectedTrainingJobId, { method: 'DELETE' });
+  closeModal('modal-training-detail');
+  loadTraining();
+}
+
 </script>
 </body>
 </html>
