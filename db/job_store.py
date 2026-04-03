@@ -55,6 +55,23 @@ ADD_RAW_KEY_SQL = """
 ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS raw_key TEXT DEFAULT '';
 """
 
+CREATE_TRAINING_JOBS_SQL = """
+CREATE TABLE IF NOT EXISTS training_jobs (
+    id              TEXT PRIMARY KEY,
+    position        TEXT NOT NULL,
+    status          TEXT NOT NULL DEFAULT 'provisioning',
+    pod_id          TEXT,
+    pod_ip          TEXT,
+    r2_prefix       TEXT NOT NULL,
+    config          JSONB NOT NULL DEFAULT '{}',
+    current_step    INTEGER NOT NULL DEFAULT 0,
+    total_steps     INTEGER NOT NULL DEFAULT 2000,
+    error           TEXT,
+    created_at      DOUBLE PRECISION NOT NULL,
+    completed_at    DOUBLE PRECISION
+);
+"""
+
 
 async def get_pool() -> asyncpg.Pool:
     global _pool
@@ -67,6 +84,7 @@ async def get_pool() -> asyncpg.Pool:
             await conn.execute(CREATE_API_KEYS_SQL)
             await conn.execute(ADD_CREDITS_CHARGED_SQL)
             await conn.execute(ADD_RAW_KEY_SQL)
+            await conn.execute(CREATE_TRAINING_JOBS_SQL)
         logger.info("[DB] PostgreSQL pool ready")
     return _pool
 
