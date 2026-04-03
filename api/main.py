@@ -13,7 +13,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from api.config import settings
 from api.metrics import router as metrics_router
-from api.routes import account, admin, generate, jobs, positions
+from api.routes import account, admin, generate, jobs, positions, training
 
 # https://www.cloudflare.com/ips/
 CLOUDFLARE_IP_RANGES = [
@@ -127,6 +127,7 @@ app.include_router(positions.router, prefix="/v1", tags=["positions"])
 app.include_router(account.router, prefix="/v1", tags=["account"])
 app.include_router(admin.router, tags=["admin"])
 app.include_router(metrics_router, tags=["metrics"])
+app.include_router(training.router, tags=["training"])
 
 
 @app.exception_handler(Exception)
