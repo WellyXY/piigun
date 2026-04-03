@@ -41,6 +41,14 @@ class Settings:
     # ── Credits ──
     CREDITS_PER_SECOND: float = float(os.getenv("CREDITS_PER_SECOND", "0.035"))
 
+    # ── LoRA Training (RunPod) ──
+    RUNPOD_API_KEY: str = os.getenv("RUNPOD_API_KEY", "")
+    RUNPOD_GPU_TYPE_ID: str = os.getenv("RUNPOD_GPU_TYPE_ID", "NVIDIA H100 80GB HBM3")
+    RUNPOD_IMAGE_NAME: str = os.getenv("RUNPOD_IMAGE_NAME", "racoonn/lora-trainer-agent:latest")
+    RUNPOD_CONTAINER_DISK_GB: int = int(os.getenv("RUNPOD_CONTAINER_DISK_GB", "100"))
+    AGENT_PORT: int = int(os.getenv("AGENT_PORT", "7860"))
+    AGENT_SECRET: str = os.getenv("AGENT_SECRET", "")
+
     # ── Post-processing (worker only) ──
     POSTPROCESS_ENABLED: bool = os.getenv("POSTPROCESS_ENABLED", "true").lower() == "true"
     RIFE_DIR: str = os.getenv("RIFE_DIR", "/raid/training/ai-toolkit/Practical-RIFE")
