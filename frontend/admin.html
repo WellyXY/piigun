@@ -228,6 +228,11 @@
         <input id="tj-position" type="text" placeholder="e.g. cowgirl" />
       </div>
       <div class="form-field" style="margin-top:14px">
+        <label>Pod Agent URL</label>
+        <input id="tj-pod-url" type="text" placeholder="https://abc123-7860.proxy.runpod.net" />
+        <div style="font-size:12px;color:var(--txt2);margin-top:4px">The public URL of your running pod with the agent installed on port 7860.</div>
+      </div>
+      <div class="form-field" style="margin-top:14px">
         <label>Training Videos (MP4)</label>
         <div id="video-drop-zone"
              ondrop="handleVideoDrop(event)" ondragover="event.preventDefault()"
@@ -259,14 +264,6 @@
           <div class="form-field">
             <label>Frames</label>
             <input id="tj-frames" type="number" value="249" min="25" max="301" />
-          </div>
-          <div class="form-field" style="grid-column:span 2">
-            <label>GPU Type</label>
-            <select id="tj-gpu" style="width:100%;padding:9px 13px;background:var(--panel);border:1px solid var(--border2);border-radius:8px;color:var(--txt1);font-size:14px;outline:none">
-              <option value="NVIDIA H100 80GB HBM3">H100 80GB (recommended)</option>
-              <option value="NVIDIA A100-SXM4-80GB">A100 80GB</option>
-              <option value="NVIDIA GeForce RTX 4090">RTX 4090 24GB</option>
-            </select>
           </div>
         </div>
       </details>
@@ -723,12 +720,12 @@ async function loadTraining() {
   }
   const statusColor = { done:'#10b981', failed:'#ef4444', training:'#7c3aed', preprocessing:'#f59e0b', provisioning:'#f59e0b', uploading:'#3b82f6', cancelled:'#6b7280' };
   let html = `<table><thead><tr>
-    <th>Position</th><th>Status</th><th>Progress</th><th>GPU</th><th>Created</th><th>Actions</th>
+    <th>Position</th><th>Status</th><th>Progress</th><th>Pod URL</th><th>Created</th><th>Actions</th>
   </tr></thead><tbody>`;
   jobs.forEach(j => {
     const pct = j.total_steps > 0 ? Math.round((j.current_step / j.total_steps) * 100) : 0;
     const col = statusColor[j.status] || '#aaa';
-    const gpu = (j.config && j.config.gpu_type_id) ? j.config.gpu_type_id.replace('NVIDIA ', '').replace(' HBM3','') : '—';
+    const podUrl = (j.config && j.config.pod_url) ? j.config.pod_url.replace('https://','').replace('http://','') : '—';
     html += `<tr>
       <td style="font-weight:500">${esc(j.position)}</td>
       <td><span style="color:${col};font-weight:500">${j.status}</span></td>
@@ -738,7 +735,7 @@ async function loadTraining() {
         </div>
         <span style="font-size:11px;color:var(--txt2)">${j.current_step}/${j.total_steps}</span>
       </td>
-      <td style="font-size:12px;color:var(--txt2)">${esc(gpu)}</td>
+      <td style="font-size:11px;color:var(--txt2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(podUrl)}</td>
       <td style="font-size:12px;color:var(--txt2)">${fmtTime(j.created_at)}</td>
       <td>
         <button class="btn btn-sm btn-inline" onclick="openTrainingDetail('${j.id}')">Logs / Deploy</button>
@@ -783,7 +780,9 @@ function renderVideoList() {
 
 async function submitNewTrainingJob() {
   const position = document.getElementById('tj-position').value.trim();
+  const podUrl = document.getElementById('tj-pod-url').value.trim();
   if (!position) { alert('Position name is required'); return; }
+  if (!podUrl) { alert('Pod Agent URL is required'); return; }
   if (!pendingVideos.length) { alert('Upload at least one video'); return; }
 
   // Step 1: Reserve job_id
@@ -809,12 +808,12 @@ async function submitNewTrainingJob() {
   const body = {
     job_id: jobId,
     position,
+    pod_url: podUrl,
     videos: pendingVideos.map(v => ({ filename: v.file.name, caption: v.caption })),
     steps: parseInt(document.getElementById('tj-steps').value) || 2000,
     learning_rate: parseFloat(document.getElementById('tj-lr').value) || 0.0001,
     rank: parseInt(document.getElementById('tj-rank').value) || 32,
     frames: parseInt(document.getElementById('tj-frames').value) || 249,
-    gpu_type_id: document.getElementById('tj-gpu').value,
   };
 
   const result = await apiFetch('/v1/admin/training/jobs', { method: 'POST', body: JSON.stringify(body) });

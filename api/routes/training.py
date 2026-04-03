@@ -103,7 +103,7 @@ async def create_training_job(req: CreateTrainingJobRequest):
         "learning_rate": req.learning_rate,
         "rank": req.rank,
         "frames": req.frames,
-        "gpu_type_id": req.gpu_type_id or settings.RUNPOD_GPU_TYPE_ID,
+        "pod_url": req.pod_url.rstrip("/"),
         "validation_prompt": req.validation_prompt,
         "videos": [{"filename": v.filename, "caption": v.caption} for v in req.videos],
     }

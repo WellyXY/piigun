@@ -209,12 +209,12 @@ class VideoCaption(BaseModel):
 class CreateTrainingJobRequest(BaseModel):
     job_id: Optional[str] = None   # pre-reserved via /jobs/prepare
     position: str
+    pod_url: str                   # e.g. https://abc123-7860.proxy.runpod.net
     videos: list[VideoCaption]
     steps: int = Field(default=2000, ge=100, le=5000)
     learning_rate: float = Field(default=1e-4, gt=0)
     rank: int = Field(default=32, ge=4, le=128)
     frames: int = Field(default=249, ge=25, le=301)
-    gpu_type_id: Optional[str] = None
     validation_prompt: Optional[str] = None
 
 

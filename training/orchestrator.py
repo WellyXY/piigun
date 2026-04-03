@@ -102,6 +102,7 @@ async def _poll_training_progress(agent_url: str, job_id: str) -> None:
 async def start_job_orchestration(job_id: str) -> None:
     """
     Full lifecycle for one training job. Run as asyncio.create_task().
+    Pod is managed externally — user provides pod_url, we just connect to the agent.
     """
     job = await training_store.get_training_job(job_id)
     if not job:
@@ -111,27 +112,21 @@ async def start_job_orchestration(job_id: str) -> None:
     config = job["config"] if isinstance(job["config"], dict) else json.loads(job["config"])
     position = job["position"]
     r2_prefix = job["r2_prefix"]
-    gpu_type = config.get("gpu_type_id", settings.RUNPOD_GPU_TYPE_ID)
+    agent_url = config.get("pod_url", "").rstrip("/")
+
+    if not agent_url:
+        await training_store.update_training_job(
+            job_id, status="failed", error="pod_url not set in job config", completed_at=time.time()
+        )
+        return
 
     try:
-        # ── 1. Create pod ──────────────────────────────────────────────
-        logger.info(f"[Orch] Provisioning pod for job {job_id}")
-        pod = await runpod_client.create_pod(job_id, gpu_type)
-        pod_id = pod["id"]
-        await training_store.update_training_job(job_id, pod_id=pod_id, status="provisioning")
-
-        # ── 2. Wait for pod RUNNING ────────────────────────────────────
-        pod = await _wait_for_pod_running(pod_id)
-        agent_url = runpod_client.get_pod_public_url(pod)
-        if not agent_url:
-            raise RuntimeError("Could not determine pod public URL")
-
+        # ── 1. Record agent URL and wait for it to respond ────────────
         await training_store.update_training_job(job_id, pod_ip=agent_url, status="provisioning")
-
-        # ── 3. Wait for agent to be ready ──────────────────────────────
+        logger.info(f"[Orch] Connecting to agent at {agent_url}")
         await _wait_for_agent(agent_url)
 
-        # ── 4. Send setup payload to agent ────────────────────────────
+        # ── 2. Download videos from R2, write config files ────────────
         await training_store.update_training_job(job_id, status="preprocessing")
         videos = config.get("videos", [])
         video_r2_keys = [f"{r2_prefix}/videos/{v['filename']}" for v in videos]
@@ -153,20 +148,20 @@ async def start_job_orchestration(job_id: str) -> None:
             "frames": config.get("frames", 249),
         })
 
-        # ── 5. Start training ─────────────────────────────────────────
+        # ── 3. Start training ─────────────────────────────────────────
         await _call_agent(agent_url, "POST", "/train", {})
         await training_store.update_training_job(job_id, status="training")
 
-        # ── 6. Poll progress ──────────────────────────────────────────
+        # ── 4. Poll progress ──────────────────────────────────────────
         await _poll_training_progress(agent_url, job_id)
 
-        # ── 7. Upload checkpoints to R2 ───────────────────────────────
+        # ── 5. Upload checkpoints to R2 ───────────────────────────────
         await training_store.update_training_job(job_id, status="uploading")
         await _call_agent(agent_url, "POST", "/upload-checkpoints", {
             "r2_prefix": r2_prefix,
         })
 
-        # ── 8. Mark done ──────────────────────────────────────────────
+        # ── 6. Mark done (pod NOT terminated — managed by user) ───────
         await training_store.update_training_job(
             job_id,
             status="done",
@@ -182,11 +177,3 @@ async def start_job_orchestration(job_id: str) -> None:
             error=str(e),
             completed_at=time.time(),
         )
-    finally:
-        # Always try to terminate the pod
-        job = await training_store.get_training_job(job_id)
-        if job and job.get("pod_id"):
-            try:
-                await runpod_client.terminate_pod(job["pod_id"])
-            except Exception as e:
-                logger.warning(f"[Orch] Pod termination in finally: {e}")
