@@ -197,3 +197,48 @@ class TopUpRequest(BaseModel):
 
 class DisableKeyRequest(BaseModel):
     disabled: bool
+
+
+# ── Training ─────────────────────────────────────────────────────
+
+class VideoCaption(BaseModel):
+    filename: str
+    caption: str
+
+
+class CreateTrainingJobRequest(BaseModel):
+    job_id: Optional[str] = None   # pre-reserved via /jobs/prepare
+    position: str
+    videos: list[VideoCaption]
+    steps: int = Field(default=2000, ge=100, le=5000)
+    learning_rate: float = Field(default=1e-4, gt=0)
+    rank: int = Field(default=32, ge=4, le=128)
+    frames: int = Field(default=249, ge=25, le=301)
+    gpu_type_id: Optional[str] = None
+    validation_prompt: Optional[str] = None
+
+
+class TrainingJobResponse(BaseModel):
+    id: str
+    position: str
+    status: str
+    pod_id: Optional[str] = None
+    pod_ip: Optional[str] = None
+    r2_prefix: str
+    config: dict
+    current_step: int
+    total_steps: int
+    error: Optional[str] = None
+    created_at: float
+    completed_at: Optional[float] = None
+
+
+class TrainingCheckpoint(BaseModel):
+    key: str
+    name: str
+    size_mb: float
+    step: int
+
+
+class TrainingJobDetailResponse(TrainingJobResponse):
+    checkpoints: list[TrainingCheckpoint] = []
