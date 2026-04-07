@@ -992,7 +992,7 @@
     };
 
     // Create a pending card immediately
-    const card = createJobCard(pos, dur);
+    const card = createJobCard(pos, dur, loraWeights);
     $('empty-state').style.display = 'none';
 
     try {
@@ -1023,9 +1023,20 @@
   });
 
   // ── Per-job card ──
-  function createJobCard(pos, dur) {
+  function createJobCard(pos, dur, lora) {
     const card = document.createElement('div');
     card.className = 'active-job-card';
+    const loraHtml = lora ? `
+      <div style="padding:6px 16px 8px;border-top:1px solid var(--border)">
+        <div class="history-lora-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='flex'?'none':'flex';this.querySelector('span').textContent=this.nextElementSibling.style.display==='flex'?'▼':'▶'">
+          <span>▶</span> LoRA weights
+        </div>
+        <div class="history-lora-chips" style="display:none">
+          <span class="lora-chip">nsfw ${lora.nsfw.toFixed(2)}</span>
+          <span class="lora-chip">motion ${lora.motion.toFixed(2)}</span>
+          <span class="lora-chip">pos ${lora.position.toFixed(2)}</span>
+        </div>
+      </div>` : '';
     card.innerHTML = `
       <div class="aj-header">
         <span class="status-pill pill-queued" style="font-size:11px">queued</span>
@@ -1040,6 +1051,7 @@
           <a class="action-btn aj-dl" href="#" download>↓ Download MP4</a>
         </div>
       </div>
+      ${loraHtml}
       <div class="aj-error"></div>
     `;
     $('active-jobs').prepend(card);
