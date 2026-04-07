@@ -811,12 +811,12 @@
   }
 
   const POSITION_DEFAULTS = {
-    blow_job: 1.2, cowgirl: 0.8, doggy: 0.8, handjob: 0.8,
+    blow_job: 1.2, cowgirl: 0.8, doggy: 0.8, handjob: 0.6,
     lift_clothes: 1.2, masturbation: 0.8, missionary: 0.8, reverse_cowgirl: 0.8,
   };
-  // Per-position nsfw/motion overrides (undefined = use global default)
-  const NSFW_PER_POS   = { lift_clothes: 0.0, handjob: 0.6, blow_job: 0.6 };
-  const MOTION_PER_POS = { lift_clothes: 0.0, handjob: 0.6, blow_job: 0.6 };
+  // Per-position nsfw/motion overrides (undefined = use global default 1.0/0.7)
+  const NSFW_PER_POS   = { lift_clothes: 0.0 };
+  const MOTION_PER_POS = { lift_clothes: 0.0 };
   const NSFW_DEFAULT   = 1.0;
   const MOTION_DEFAULT = 0.7;
 
