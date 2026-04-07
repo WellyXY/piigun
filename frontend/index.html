@@ -812,22 +812,27 @@
 
   const POSITION_DEFAULTS = {
     blow_job: 1.2, cowgirl: 0.8, doggy: 0.8, handjob: 0.8,
-    lift_clothes: 0.6, masturbation: 0.8, missionary: 0.8, reverse_cowgirl: 0.8,
+    lift_clothes: 1.2, masturbation: 0.8, missionary: 0.8, reverse_cowgirl: 0.8,
   };
-  const NSFW_DEFAULT = 1.0;
+  // Per-position nsfw/motion overrides (undefined = use global default)
+  const NSFW_PER_POS   = { lift_clothes: 0.0, handjob: 0.6, blow_job: 0.6 };
+  const MOTION_PER_POS = { lift_clothes: 0.0, handjob: 0.6, blow_job: 0.6 };
+  const NSFW_DEFAULT   = 1.0;
   const MOTION_DEFAULT = 0.7;
 
   function updateLoraDefaults(pos) {
-    const posDefault = POSITION_DEFAULTS[pos] ?? 0.8;
-    $('lora-nsfw-default').textContent = `default: ${NSFW_DEFAULT}`;
-    $('lora-motion-default').textContent = `default: ${MOTION_DEFAULT}`;
+    const posDefault  = POSITION_DEFAULTS[pos] ?? 0.8;
+    const nsfwDefault = NSFW_PER_POS[pos]   ?? NSFW_DEFAULT;
+    const motionDefault = MOTION_PER_POS[pos] ?? MOTION_DEFAULT;
+    $('lora-nsfw-default').textContent = `default: ${nsfwDefault}`;
+    $('lora-motion-default').textContent = `default: ${motionDefault}`;
     $('lora-position-default').textContent = `default: ${posDefault}`;
     $('position-lora-name').textContent = `Position (${pos.replace('_',' ')})`;
-    // Reset sliders to defaults when position changes
-    $('nsfw-weight').value = NSFW_DEFAULT;
-    $('nsfw-val').textContent = NSFW_DEFAULT.toFixed(2);
-    $('motion-weight').value = MOTION_DEFAULT;
-    $('motion-val').textContent = MOTION_DEFAULT.toFixed(2);
+    // Reset sliders to per-position defaults when position changes
+    $('nsfw-weight').value = nsfwDefault;
+    $('nsfw-val').textContent = nsfwDefault.toFixed(2);
+    $('motion-weight').value = motionDefault;
+    $('motion-val').textContent = motionDefault.toFixed(2);
     $('position-weight').value = posDefault;
     $('position-val').textContent = posDefault.toFixed(2);
   }
