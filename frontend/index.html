@@ -657,8 +657,11 @@
 
     <!-- LoRA Weights -->
     <div>
-      <div class="section-label">LoRA Weights <span id="lora-defaults-hint" style="font-size:10px;font-weight:400;color:var(--txt3);margin-left:6px"></span></div>
-      <div class="lora-weights">
+      <div class="section-label" id="lora-toggle-row" onclick="toggleLoraWeights()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;">
+        <span>LoRA Weights <span id="lora-defaults-hint" style="font-size:10px;font-weight:400;color:var(--txt3);margin-left:6px"></span></span>
+        <span id="lora-toggle-icon" style="font-size:11px;color:var(--txt3);transition:transform 0.2s">▼</span>
+      </div>
+      <div class="lora-weights" id="lora-weights-body" style="display:none;margin-top:10px">
         <div class="lora-row">
           <div class="lora-row-header">
             <div>
@@ -775,6 +778,14 @@
   let fileName    = '';
 
   // Default LoRA weights (must match config.py POSITION_LORA_WEIGHTS)
+  function toggleLoraWeights() {
+    const body = $('lora-weights-body');
+    const icon = $('lora-toggle-icon');
+    const visible = body.style.display !== 'none';
+    body.style.display = visible ? 'none' : 'flex';
+    icon.style.transform = visible ? '' : 'rotate(180deg)';
+  }
+
   const POSITION_DEFAULTS = {
     blow_job: 1.2, cowgirl: 0.8, doggy: 0.8, handjob: 0.8,
     lift_clothes: 0.6, masturbation: 0.8, missionary: 0.8, reverse_cowgirl: 0.8,
