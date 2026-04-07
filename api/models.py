@@ -35,6 +35,9 @@ class GenerateRequest(BaseModel):
     callback_url: Optional[str] = None
     include_audio: bool = False
     audio_description: Optional[str] = ""
+    nsfw_weight: Optional[float] = Field(default=None, ge=0.0, le=2.0)
+    motion_weight: Optional[float] = Field(default=None, ge=0.0, le=2.0)
+    position_weight: Optional[float] = Field(default=None, ge=0.0, le=2.0)
 
     @model_validator(mode="after")
     def check_image_source(self):

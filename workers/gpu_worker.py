@@ -135,6 +135,12 @@ async def process_job(engine: InferenceEngine, r: aioredis.Redis, job_id: str):
         with open(tmp_image_path, "wb") as _f:
             _f.write(_resp.content)
 
+        def _parse_weight(val) -> float | None:
+            try:
+                return float(val) if val not in (None, "", "None") else None
+            except (ValueError, TypeError):
+                return None
+
         raw_video_path, gen_time = engine.generate(
             position=position,
             image_path=tmp_image_path,
@@ -143,6 +149,9 @@ async def process_job(engine: InferenceEngine, r: aioredis.Redis, job_id: str):
             seed=int(job.get("seed", 42)),
             include_audio=job.get("include_audio", "false").lower() == "true",
             audio_description=job.get("audio_description", ""),
+            nsfw_weight=_parse_weight(job.get("nsfw_weight")),
+            motion_weight=_parse_weight(job.get("motion_weight")),
+            position_weight=_parse_weight(job.get("position_weight")),
         )
         try:
             os.unlink(tmp_image_path)

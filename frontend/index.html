@@ -261,6 +261,14 @@
     /* Divider */
     .divider { height: 1px; background: var(--border); }
 
+    /* LoRA weights */
+    .lora-weights { display: flex; flex-direction: column; gap: 10px; }
+    .lora-row { display: flex; flex-direction: column; gap: 4px; }
+    .lora-row-header { display: flex; justify-content: space-between; align-items: center; }
+    .lora-name { font-size: 12px; font-weight: 500; color: var(--txt2); }
+    .lora-default { font-size: 10px; color: var(--txt3); }
+    .lora-val { font-size: 13px; font-weight: 600; color: var(--accent2); min-width: 28px; text-align: right; }
+
     /* Generate button */
     .gen-btn {
       width: 100%;
@@ -647,6 +655,45 @@
 
     <div class="divider"></div>
 
+    <!-- LoRA Weights -->
+    <div>
+      <div class="section-label">LoRA Weights <span id="lora-defaults-hint" style="font-size:10px;font-weight:400;color:var(--txt3);margin-left:6px"></span></div>
+      <div class="lora-weights">
+        <div class="lora-row">
+          <div class="lora-row-header">
+            <div>
+              <span class="lora-name">NSFW</span>
+              <span class="lora-default" id="lora-nsfw-default"></span>
+            </div>
+            <span class="lora-val" id="nsfw-val">1.0</span>
+          </div>
+          <input type="range" id="nsfw-weight" min="0" max="2" value="1.0" step="0.05" />
+        </div>
+        <div class="lora-row">
+          <div class="lora-row-header">
+            <div>
+              <span class="lora-name">Motion</span>
+              <span class="lora-default" id="lora-motion-default"></span>
+            </div>
+            <span class="lora-val" id="motion-val">0.7</span>
+          </div>
+          <input type="range" id="motion-weight" min="0" max="2" value="0.7" step="0.05" />
+        </div>
+        <div class="lora-row">
+          <div class="lora-row-header">
+            <div>
+              <span class="lora-name" id="position-lora-name">Position (cowgirl)</span>
+              <span class="lora-default" id="lora-position-default"></span>
+            </div>
+            <span class="lora-val" id="position-val">0.8</span>
+          </div>
+          <input type="range" id="position-weight" min="0" max="2" value="0.8" step="0.05" />
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
     <!-- Params -->
     <div>
       <div class="section-label">Parameters</div>
@@ -726,6 +773,34 @@
   let selectedPos = 'cowgirl';
   let imageBase64 = null;
   let fileName    = '';
+
+  // Default LoRA weights (must match config.py POSITION_LORA_WEIGHTS)
+  const POSITION_DEFAULTS = {
+    blow_job: 1.2, cowgirl: 0.8, doggy: 0.8, handjob: 0.8,
+    lift_clothes: 0.6, masturbation: 0.8, missionary: 0.8, reverse_cowgirl: 0.8,
+  };
+  const NSFW_DEFAULT = 1.0;
+  const MOTION_DEFAULT = 0.7;
+
+  function updateLoraDefaults(pos) {
+    const posDefault = POSITION_DEFAULTS[pos] ?? 0.8;
+    $('lora-nsfw-default').textContent = `default: ${NSFW_DEFAULT}`;
+    $('lora-motion-default').textContent = `default: ${MOTION_DEFAULT}`;
+    $('lora-position-default').textContent = `default: ${posDefault}`;
+    $('position-lora-name').textContent = `Position (${pos.replace('_',' ')})`;
+    // Reset sliders to defaults when position changes
+    $('nsfw-weight').value = NSFW_DEFAULT;
+    $('nsfw-val').textContent = NSFW_DEFAULT.toFixed(2);
+    $('motion-weight').value = MOTION_DEFAULT;
+    $('motion-val').textContent = MOTION_DEFAULT.toFixed(2);
+    $('position-weight').value = posDefault;
+    $('position-val').textContent = posDefault.toFixed(2);
+  }
+
+  // Slider live update
+  $('nsfw-weight').addEventListener('input', e => { $('nsfw-val').textContent = parseFloat(e.target.value).toFixed(2); });
+  $('motion-weight').addEventListener('input', e => { $('motion-val').textContent = parseFloat(e.target.value).toFixed(2); });
+  $('position-weight').addEventListener('input', e => { $('position-val').textContent = parseFloat(e.target.value).toFixed(2); });
 
   // ── History (localStorage) ──
   const HISTORY_KEY = 'piigu_history';
@@ -811,8 +886,12 @@
       document.querySelectorAll('.pos-chip').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       selectedPos = btn.dataset.value;
+      updateLoraDefaults(selectedPos);
     });
   });
+
+  // Init defaults on load
+  updateLoraDefaults(selectedPos);
 
   // ── Audio toggle ── (presets handled server-side, nothing to show)
   $('audio-toggle').addEventListener('change', () => {
@@ -872,11 +951,14 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY() },
         body: JSON.stringify({
-          image_base64:  imageBase64,
-          position:      pos,
-          duration:      dur,
-          include_audio: $('audio-toggle').checked,
+          image_base64:   imageBase64,
+          position:       pos,
+          duration:       dur,
+          include_audio:  $('audio-toggle').checked,
           audio_description: $('audio-toggle').checked ? $('audio-description').value.trim() : '',
+          nsfw_weight:    parseFloat($('nsfw-weight').value),
+          motion_weight:  parseFloat($('motion-weight').value),
+          position_weight: parseFloat($('position-weight').value),
         }),
       });
       const data = await res.json();

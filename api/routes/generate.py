@@ -104,6 +104,9 @@ async def submit_generate(
         api_key_hash=key_hash,
         include_audio=req.include_audio,
         audio_description=req.audio_description or "",
+        nsfw_weight=req.nsfw_weight,
+        motion_weight=req.motion_weight,
+        position_weight=req.position_weight,
     )
 
     # Persist to PostgreSQL

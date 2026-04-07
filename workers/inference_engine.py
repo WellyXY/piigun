@@ -70,6 +70,9 @@ class InferenceEngine:
         seed: int = 42,
         include_audio: bool = False,
         audio_description: str = "",
+        nsfw_weight: float | None = None,
+        motion_weight: float | None = None,
+        position_weight: float | None = None,
         **kwargs,
     ) -> tuple[str, float]:
         """
@@ -109,6 +112,12 @@ class InferenceEngine:
         }
         if include_audio and effective_audio:
             payload["audio_description"] = effective_audio
+        if nsfw_weight is not None:
+            payload["nsfw_weight"] = nsfw_weight
+        if motion_weight is not None:
+            payload["motion_weight"] = motion_weight
+        if position_weight is not None:
+            payload["position_weight"] = position_weight
 
         resp = httpx.post(
             f"{self.server_url}/generate",

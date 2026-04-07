@@ -29,6 +29,9 @@ async def create_job(
     api_key_hash: str,
     include_audio: bool = False,
     audio_description: str = "",
+    nsfw_weight: Optional[float] = None,
+    motion_weight: Optional[float] = None,
+    position_weight: Optional[float] = None,
 ) -> dict:
     job_id = f"job_{uuid.uuid4().hex[:12]}"
     now = time.time()
@@ -46,6 +49,9 @@ async def create_job(
         "api_key_hash": api_key_hash,
         "include_audio": include_audio,
         "audio_description": audio_description,
+        "nsfw_weight": nsfw_weight if nsfw_weight is not None else "",
+        "motion_weight": motion_weight if motion_weight is not None else "",
+        "position_weight": position_weight if position_weight is not None else "",
         "created_at": now,
         "started_at": 0,
         "completed_at": 0,
