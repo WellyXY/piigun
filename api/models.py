@@ -30,7 +30,7 @@ class GenerateRequest(BaseModel):
     image_base64: Optional[str] = None
     position: str = "cowgirl"
     prompt: Optional[str] = ""
-    duration: int = Field(default=10, ge=5, le=10)
+    duration: int = Field(default=10, ge=5, le=15)
     seed: Optional[int] = None
     callback_url: Optional[str] = None
     include_audio: bool = False
