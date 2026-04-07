@@ -86,6 +86,7 @@ class InferenceEngine:
 
         # Always use default prompt regardless of user input
         effective_prompt = DEFAULT_PROMPTS.get(position, position.replace("_", " "))
+        logger.info(f"[GPU {self.gpu_id}] prompt: {effective_prompt[:120]}...")
         # Audio: wrap user's custom text in the standard scene format, or use default preset
         if include_audio:
             user_audio = audio_description.strip()
