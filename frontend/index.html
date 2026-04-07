@@ -442,6 +442,21 @@
       transition: border-color .15s, color .15s;
     }
     .history-btn:hover { border-color: var(--accent2); color: var(--txt1); }
+    .history-lora-toggle {
+      font-size: 10px; color: var(--txt3); cursor: pointer;
+      padding: 2px 0; margin-top: 3px; user-select: none;
+      display: inline-flex; align-items: center; gap: 3px;
+    }
+    .history-lora-toggle:hover { color: var(--txt2); }
+    .history-lora-chips {
+      display: none; flex-wrap: wrap; gap: 4px; margin-top: 5px;
+    }
+    .lora-chip {
+      font-size: 10px; padding: 2px 7px;
+      border-radius: 4px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--txt3);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
 
     .job-header {
       display: flex; align-items: center; gap: 12px;
@@ -778,6 +793,15 @@
   let fileName    = '';
 
   // Default LoRA weights (must match config.py POSITION_LORA_WEIGHTS)
+  window.toggleHistoryLora = function(i) {
+    const chips = document.getElementById(`hlora-chips-${i}`);
+    const icon  = document.getElementById(`hlora-icon-${i}`);
+    if (!chips) return;
+    const open = chips.style.display === 'flex';
+    chips.style.display = open ? 'none' : 'flex';
+    icon.textContent = open ? '▶' : '▼';
+  };
+
   function toggleLoraWeights() {
     const body = $('lora-weights-body');
     const icon = $('lora-toggle-icon');
@@ -839,6 +863,15 @@
           <div class="history-pos">${h.position.replace('_',' ')}</div>
           <div class="history-meta">${h.duration}s · ${h.ts}</div>
           <div class="history-id">${h.job_id}</div>
+          ${h.lora ? `
+          <div class="history-lora-toggle" onclick="event.stopPropagation();toggleHistoryLora(${i})">
+            <span id="hlora-icon-${i}">▶</span> LoRA weights
+          </div>
+          <div class="history-lora-chips" id="hlora-chips-${i}">
+            <span class="lora-chip">nsfw ${h.lora.nsfw.toFixed(2)}</span>
+            <span class="lora-chip">motion ${h.lora.motion.toFixed(2)}</span>
+            <span class="lora-chip">pos ${h.lora.position.toFixed(2)}</span>
+          </div>` : ''}
         </div>
         <div class="history-actions">
           ${h.video_url ? `<a class="history-btn" href="${h.video_url}" download onclick="event.stopPropagation()">↓</a>` : ''}
@@ -952,6 +985,11 @@
 
     const pos = selectedPos;
     const dur = parseInt($('duration').value);
+    const loraWeights = {
+      nsfw:     parseFloat($('nsfw-weight').value),
+      motion:   parseFloat($('motion-weight').value),
+      position: parseFloat($('position-weight').value),
+    };
 
     // Create a pending card immediately
     const card = createJobCard(pos, dur);
@@ -967,9 +1005,9 @@
           duration:       dur,
           include_audio:  $('audio-toggle').checked,
           audio_description: $('audio-toggle').checked ? $('audio-description').value.trim() : '',
-          nsfw_weight:    parseFloat($('nsfw-weight').value),
-          motion_weight:  parseFloat($('motion-weight').value),
-          position_weight: parseFloat($('position-weight').value),
+          nsfw_weight:    loraWeights.nsfw,
+          motion_weight:  loraWeights.motion,
+          position_weight: loraWeights.position,
         }),
       });
       const data = await res.json();
@@ -977,7 +1015,7 @@
 
       card.querySelector('.aj-id').textContent = data.job_id;
       cardLog(card, `Queued · #${data.position_in_queue} · ~${data.estimated_wait_seconds}s`);
-      startPolling(data.job_id, pos, dur, card);
+      startPolling(data.job_id, pos, dur, card, loraWeights);
     } catch(err) {
       cardError(card, err.message);
       toast('Error: ' + err.message);
@@ -1027,7 +1065,7 @@
   }
 
   // ── Polling (independent per job) ──
-  function startPolling(jobId, position, duration, card) {
+  function startPolling(jobId, position, duration, card, lora) {
     let lastStatus = '';
     const timer = setInterval(async () => {
       try {
@@ -1058,11 +1096,11 @@
           card.querySelector('.aj-dl').href = job.video_url;
           card.querySelector('.aj-video').style.display = 'block';
           v.ontimeupdate = () => { if (v.currentTime >= 10) { v.pause(); v.ontimeupdate = null; } };
-          addToHistory({ job_id: jobId, position, duration, status: 'completed', video_url: job.video_url, ts: new Date().toLocaleTimeString() });
+          addToHistory({ job_id: jobId, position, duration, status: 'completed', video_url: job.video_url, ts: new Date().toLocaleTimeString(), lora });
         } else if (['failed', 'cancelled'].includes(job.status)) {
           clearInterval(timer);
           cardError(card, job.error || 'Job failed unexpectedly.');
-          addToHistory({ job_id: jobId, position, duration, status: 'failed', video_url: null, ts: new Date().toLocaleTimeString() });
+          addToHistory({ job_id: jobId, position, duration, status: 'failed', video_url: null, ts: new Date().toLocaleTimeString(), lora });
         }
       } catch(e) { console.warn('poll error', e); }
     }, 3000);
