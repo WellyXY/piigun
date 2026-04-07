@@ -84,8 +84,8 @@ class InferenceEngine:
         raw = duration * 25
         num_frames = ((raw - 1 + 7) // 8) * 8 + 1  # 5s→121, 10s→249
 
-        # Always use default prompt regardless of user input
-        effective_prompt = DEFAULT_PROMPTS.get(position, position.replace("_", " "))
+        # Use custom prompt if provided, otherwise fall back to default
+        effective_prompt = prompt.strip() if prompt and prompt.strip() else DEFAULT_PROMPTS.get(position, position.replace("_", " "))
         logger.info(f"[GPU {self.gpu_id}] prompt: {effective_prompt[:120]}...")
         # Audio: wrap user's custom text in the standard scene format, or use default preset
         if include_audio:
@@ -101,7 +101,7 @@ class InferenceEngine:
             effective_audio = ""
 
         t0 = time.time()
-        logger.info(f"[GPU {self.gpu_id}] Calling server: position={position}, frames={num_frames}, audio={include_audio}")
+        logger.info(f"[GPU {self.gpu_id}] Calling server: position={position}, frames={num_frames}, audio={include_audio}, nsfw_w={nsfw_weight}, motion_w={motion_weight}, pos_w={position_weight}")
 
         payload: dict = {
             "prompt": effective_prompt,

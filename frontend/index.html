@@ -719,6 +719,23 @@
         <div class="field">
           <div class="toggle-row">
             <div class="toggle-info">
+              <span class="toggle-label">Custom Prompt</span>
+              <span class="toggle-sub">Override the default scene prompt</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="prompt-toggle" />
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+          <div id="prompt-wrap" style="display:none;margin-top:10px">
+            <div class="input-wrap">
+              <textarea id="custom-prompt" rows="4" placeholder="Describe the scene… (leave empty to use position default)"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <div class="toggle-row">
+            <div class="toggle-info">
               <span class="toggle-label">Audio / Dirty Talk</span>
               <span class="toggle-sub">Character vocal audio</span>
             </div>
@@ -943,6 +960,9 @@
   updateLoraDefaults(selectedPos);
 
   // ── Audio toggle ── (presets handled server-side, nothing to show)
+  $('prompt-toggle').addEventListener('change', () => {
+    $('prompt-wrap').style.display = $('prompt-toggle').checked ? 'block' : 'none';
+  });
   $('audio-toggle').addEventListener('change', () => {
     $('audio-desc-wrap').style.display = $('audio-toggle').checked ? 'block' : 'none';
   });
@@ -1008,6 +1028,7 @@
           image_base64:   imageBase64,
           position:       pos,
           duration:       dur,
+          prompt:         $('prompt-toggle').checked ? $('custom-prompt').value.trim() : '',
           include_audio:  $('audio-toggle').checked,
           audio_description: $('audio-toggle').checked ? $('audio-description').value.trim() : '',
           nsfw_weight:    loraWeights.nsfw,
