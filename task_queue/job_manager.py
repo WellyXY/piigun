@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import random
 import time
 import uuid
 from typing import Optional
@@ -43,7 +44,7 @@ async def create_job(
         "position": position,
         "prompt": prompt or "",
         "duration": duration,
-        "seed": seed if seed is not None else int(now) % 100000,
+        "seed": seed if seed is not None else random.randint(0, 2**31 - 1),
         "image_url": image_url,
         "callback_url": callback_url or "",
         "api_key_hash": api_key_hash,
