@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, model_validator
 AVAILABLE_POSITIONS = [
     "blow_job", "cowgirl", "doggy", "handjob", "lift_clothes",
     "masturbation", "missionary", "reverse_cowgirl", "tit_job",
+    "dildo", "boobs_play",
 ]
 
 
