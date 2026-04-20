@@ -43,6 +43,21 @@ DEFAULT_AUDIO = {
     "boobs_play": "soft moaning as she touches herself, she whispers \"my nipples are so sensitive\" in a breathy voice, gentle squeezing sounds, her breathing quickening with arousal, soft sighs of pleasure as she caresses her chest.",
 }
 
+# Audio-ON prompts: audio/speech interwoven with visuals (model expects inline soundscape, NOT appended)
+DEFAULT_PROMPTS_AUDIO = {
+    "blow_job": 'A woman performing fellatio on a man. Wet slurping sounds fill the room as she takes his penis deeply into her mouth, moving her head rhythmically with steady oral strokes, lips tightly wrapped around the shaft. She moans softly around the shaft, whispering "you taste so good" in a husky voice between strokes. The penetration into her mouth is clearly visible with each bob of her head, occasional gagging followed by breathless gasps, her breathing deepening with arousal. -- blow_job',
+    "cowgirl": 'The woman, in a cowgirl position atop the man, facing him, drives her hips downward with fierce, rhythmic intensity. Rhythmic skin-on-skin contact and soft bed springs creaking accompany each motion. She guides his penis deep into her vagina with each deliberate thrust, moaning loudly between heavy breaths, whispering "you feel so good" in a sultry breathless voice. The penetration is forceful, each motion probing the depths within. Her hands tightly clutch a nearby surface, her body arching with unrestrained fervor. She gasps "don\'t stop" as the intensity peaks, her moans building with each thrust, punctuated by sharp gasps. Her head tilts back sharply, lips parting in a ragged, primal moan. Her cheeks burn with a deep crimson flush, her breath coming in sharp, uneven gasps, her lower lip quivering as she bites it fiercely.',
+    "doggy": 'The man stands behind the woman, extending his penis toward her vagina. Loud rhythmic slapping sounds echo as his penis presses against the entrance. He enters with a forceful yet controlled rhythm, each thrust delving deep within. She moans deeply with each thrust, gasping "harder" in a breathy desperate voice. The slight resistance of the vaginal opening intensifies the precision of his movements, his hands gripping her hips firmly. She grips the sheets tightly, crying out "right there" between heavy panting and sharp cries of pleasure. The woman, on her hands and knees, arches her back sharply, her mouth opening with each powerful thrust. The room\'s dim light casts stark shadows on her glistening skin.',
+    "handjob": 'In the scene, the woman tightly grasps the man\'s penis with both hands, moving them slowly up and down with wet stroking sounds. The motion of her fingers is clearly visible as they glide deliberately to the tip and descend. She whispers "you like that?" in a teasing seductive voice, soft moaning escaping between strokes. Her expression is vivid, cheeks flushed with a deep blush, mouth wide open as she gasps heavily. Her breathing gets heavier and faster as she whispers "come for me" with a sly smirk curling her lips. Occasional giggles mix with sultry encouragement, her tongue grazing her lips, biting them with a hungry edge.',
+    "tit_job": 'In the scene, the woman tightly grasps the man\'s penis with both hands, moving them slowly up and down with wet stroking sounds. The motion of her fingers is clearly visible as they glide deliberately to the tip and descend. She whispers "you like that?" in a teasing seductive voice, soft moaning escaping between strokes. Her expression is vivid, cheeks flushed with a deep blush, mouth wide open as she gasps heavily. Her breathing gets heavier and faster as she whispers "come for me" with a sly smirk curling her lips. Occasional giggles mix with sultry encouragement, her tongue grazing her lips, biting them with a hungry edge.',
+    "lift_clothes": 'A female lifts her shirt up slowly, soft fabric rustling as the material rises. She giggles playfully, whispering "want to see more?" in a teasing innocent voice as her round, natural breasts are revealed with soft smooth skin and clearly visible erect nipples. She cups both breasts with her hands, a soft moan escaping as she touches herself, lifting and squeezing them gently. She whispers "do you like what you see?" with light breathing, then jiggles them with a slow bouncing motion, the natural weight swaying with each movement. The camera is static, medium shot, front view. Her expression is subtly aroused, lips slightly parted.',
+    "masturbation": 'The woman, reclining or seated, explores her body with slow deliberate touches, wet rhythmic sounds accompanying her fingers as they trace over her skin. She settles on her clitoris with focused rhythmic strokes, soft building moans escaping her lips. She whispers "oh god" breathlessly as each movement alternates between gentle circles and firmer presses. Her other hand roams, teasing her breasts. Her head tilts back, whispering "yes" as the sensation peaks, her breathing becoming ragged and desperate. Her eyes clench shut in a wave of ecstasy, gasping and whimpering with increasing urgency. Her cheeks flush with a deep feverish blush, her lower lip trembling as she bites it gently, a strained yet rapturous smile breaking through with each pulsing touch.',
+    "missionary": 'The woman lies on her back in a missionary pose, her legs spread wide. Bed creaking rhythmically and skin slapping sounds fill the room as she drives her hips upward with fierce intensity. Each motion meets the man\'s penetrating thrusts, she moans "deeper" with increasing desperation, heavy breathing mixed with sharp gasps. The penis delves deep into her vagina with relentless precision. Her head tilts back, her voice breaking with pleasure as she whispers "don\'t stop" in a fevered, almost pleading tone. Her brows knit tightly with each powerful thrust, yet her cheeks flush with a deep crimson blush. She gasps "I\'m so close" as her breath comes in ragged bursts, her body trembling in sync with the relentless rhythm. The glistening sheen of her skin under soft light amplifies the raw intensity.',
+    "reverse_cowgirl": 'The woman, positioned above the man and facing forward, drives her hips downward with fierce rhythmic intensity. Rhythmic bouncing sounds and skin contact echo as she guides his penis deep into her vagina with each deliberate thrust. She moans with a deep primal intensity, gasping "you feel amazing" in a breathy voice. The penetration is forceful, each motion probing the depths within. Heavy panting and sharp exhales punctuate each downward thrust as she gasps "so deep" with unrestrained fervor. Her hair whips wildly with her movements, catching the soft light that bathes her glistening skin, heightening the primal allure of the scene.',
+    "dildo": 'A woman masturbating with a dildo. Wet rhythmic sounds of the toy thrusting fill the room as she inserts the sex toy into her vagina. She thrusts it rhythmically, moaning breathlessly with each stroke, whispering "feels so good" in a desperate voice. The insertion and withdrawal motion is clearly visible, her hips rocking to meet each thrust. She gasps "deeper" as her breathing becomes ragged and urgent, building gasps of pleasure. Her free hand caresses her body, her expression flushed with arousal, lips parted in breathless moans as the pleasure builds. -- dildo',
+    "boobs_play": 'A woman playing with her own breasts and nipples. She squeezes, fondles, and massages her breasts sensually with both hands, soft moaning escaping as she touches herself. She whispers "my nipples are so sensitive" in a breathy voice as her fingers pinch and rub her erect nipples with visible pleasure. Gentle squeezing sounds accompany her movements, her breathing quickening with arousal. Her head tilts back with soft sighs of pleasure as she caresses her chest, lifting and pressing her breasts together. Her expression is flushed and aroused, lips parted as she loses herself in the sensation. -- boobs_play',
+}
+
 
 @dataclass
 class InferenceEngine:
@@ -91,20 +106,26 @@ class InferenceEngine:
         num_frames = ((raw - 1 + 7) // 8) * 8 + 1  # 5s→121, 10s→249
 
         # Use custom prompt if provided, otherwise fall back to default
-        effective_prompt = prompt.strip() if prompt and prompt.strip() else DEFAULT_PROMPTS.get(position, position.replace("_", " "))
-        logger.info(f"[GPU {self.gpu_id}] prompt: {effective_prompt[:120]}...")
-        # Audio: wrap user's custom text in the standard scene format, or use default preset
-        if include_audio:
+        custom = prompt.strip() if prompt and prompt.strip() else ""
+        if include_audio and not custom:
+            # Audio ON + no custom prompt → use interleaved prompt (audio woven into visuals)
+            effective_prompt = DEFAULT_PROMPTS_AUDIO.get(position, DEFAULT_PROMPTS.get(position, position.replace("_", " ")))
+            effective_audio = DEFAULT_AUDIO.get(position, "")
+        elif include_audio and custom:
+            # Audio ON + custom prompt → interleave user's audio into the custom prompt
             user_audio = audio_description.strip()
-            if user_audio:
-                effective_audio = (
-                    f'rhythmic bouncing sounds, skin contact, she moans with a deep primal intensity, '
-                    f'gasping and saying : "{user_audio}" heavy panting and sharp exhales punctuating each downward thrust.'
-                )
-            else:
-                effective_audio = DEFAULT_AUDIO.get(position, "")
+            effective_audio = user_audio if user_audio else DEFAULT_AUDIO.get(position, "")
+            # Weave audio inline instead of appending "Audio:" at end
+            effective_prompt = (
+                f'{custom} She moans with deep intensity, '
+                f'{effective_audio}'
+            )
         else:
+            # Audio OFF → visual-only prompt
+            effective_prompt = custom if custom else DEFAULT_PROMPTS.get(position, position.replace("_", " "))
             effective_audio = ""
+
+        logger.info(f"[GPU {self.gpu_id}] prompt ({('audio' if include_audio else 'visual')}): {effective_prompt[:120]}...")
 
         t0 = time.time()
         logger.info(f"[GPU {self.gpu_id}] Calling server: position={position}, frames={num_frames}, audio={include_audio}, nsfw_w={nsfw_weight}, motion_w={motion_weight}, pos_w={position_weight}")
@@ -117,8 +138,7 @@ class InferenceEngine:
             "seed": seed,
             "enhance": True,
         }
-        if include_audio and effective_audio:
-            payload["audio_description"] = effective_audio
+        # Audio is now inline in the prompt — no separate audio_description needed
         if nsfw_weight is not None:
             payload["nsfw_weight"] = nsfw_weight
         if motion_weight is not None:
