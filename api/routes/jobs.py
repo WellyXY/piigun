@@ -69,6 +69,8 @@ async def get_job_status(
             position=job["position"],
             duration=int(job.get("duration", 10)),
             prompt=job.get("prompt", ""),
+            include_audio=str(job.get("include_audio", "False")).lower() == "true",
+            audio_description=job.get("audio_description", ""),
         ),
     )
 

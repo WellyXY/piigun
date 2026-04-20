@@ -1082,6 +1082,7 @@
         </div>
       </div>
       ${loraHtml}
+      <div class="aj-prompt-section"></div>
       <div class="aj-error"></div>
     `;
     $('active-jobs').prepend(card);
@@ -1109,6 +1110,7 @@
   // ── Polling (independent per job) ──
   function startPolling(jobId, position, duration, card, lora) {
     let lastStatus = '';
+    let promptInjected = false;
     const timer = setInterval(async () => {
       try {
         const res = await fetch(`${BASE_URL()}/v1/jobs/${jobId}`, {
@@ -1117,6 +1119,27 @@
         const job = await res.json();
         const pct = Math.round((job.progress || 0) * 100);
         cardStatus(card, job.status, pct);
+
+        if (!promptInjected && job.metadata) {
+          promptInjected = true;
+          const m = job.metadata;
+          const visualText = (m.prompt || '').trim() || '(default)';
+          const audioLine = m.include_audio
+            ? `<div style="margin-top:4px;color:var(--txt2)">🎵 ${(m.audio_description || '').trim() || 'Default audio'}</div>`
+            : '';
+          const promptSection = card.querySelector('.aj-prompt-section');
+          if (promptSection) {
+            promptSection.innerHTML = `
+              <div style="padding:6px 16px 8px;border-top:1px solid var(--border)">
+                <div class="history-lora-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block';this.querySelector('span').textContent=this.nextElementSibling.style.display==='block'?'▼':'▶'">
+                  <span>▶</span> Prompt
+                </div>
+                <div style="display:none;font-size:11px;padding:6px 0;line-height:1.5;color:var(--txt2);word-break:break-word">
+                  ${visualText.replace(/</g,'&lt;')}${audioLine}
+                </div>
+              </div>`;
+          }
+        }
 
         if (job.status !== lastStatus) {
           lastStatus = job.status;

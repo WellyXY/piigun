@@ -67,6 +67,8 @@ class JobMetadata(BaseModel):
     resolution: str = "720p"
     fps: int = 30
     prompt: str = ""
+    include_audio: bool = False
+    audio_description: str = ""
 
 
 class JobResponse(BaseModel):
