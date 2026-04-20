@@ -139,4 +139,4 @@ class InferenceEngine:
         video_path = result.get("enhanced_video") or result["raw_video"]
         logger.info(f"[GPU {self.gpu_id}] Server returned: {video_path} in {gen_time:.1f}s")
 
-        return video_path, result.get("inference_s", gen_time)
+        return video_path, result.get("inference_s", gen_time), effective_prompt, effective_audio

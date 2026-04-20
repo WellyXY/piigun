@@ -141,7 +141,7 @@ async def process_job(engine: InferenceEngine, r: aioredis.Redis, job_id: str):
             except (ValueError, TypeError):
                 return None
 
-        raw_video_path, gen_time = engine.generate(
+        raw_video_path, gen_time, eff_prompt, eff_audio = engine.generate(
             position=position,
             image_path=tmp_image_path,
             prompt=job.get("prompt", ""),
@@ -157,7 +157,8 @@ async def process_job(engine: InferenceEngine, r: aioredis.Redis, job_id: str):
             os.unlink(tmp_image_path)
         except Exception:
             pass
-        await update_job(r, job_id, progress=0.7)
+        await update_job(r, job_id, progress=0.7,
+                         prompt=eff_prompt, audio_description=eff_audio)
 
         # server.py already handles GFPGAN enhancement
         final_path = raw_video_path
