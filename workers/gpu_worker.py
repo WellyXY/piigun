@@ -55,12 +55,14 @@ async def _upload_to_r2(job_id: str, video_path: str) -> str:
     return await asyncio.to_thread(upload_video, job_id, video_path)
 
 
-async def _write_pg_complete(job_id: str, video_url: str, completed_at: float, started_at: float):
+async def _write_pg_complete(job_id: str, video_url: str, completed_at: float, started_at: float,
+                             prompt: str = "", audio_description: str = ""):
     if not settings.DATABASE_URL:
         return
     try:
         from db import job_store
-        await job_store.complete_job(job_id, video_url, completed_at, started_at)
+        await job_store.complete_job(job_id, video_url, completed_at, started_at,
+                                    prompt=prompt, audio_description=audio_description)
     except Exception as e:
         logger.warning(f"PG complete write failed for {job_id}: {e}")
 
@@ -178,7 +180,8 @@ async def process_job(engine: InferenceEngine, r: aioredis.Redis, job_id: str):
                          completed_at=completed_at,
                          video_url=video_url)
 
-        await _write_pg_complete(job_id, video_url, completed_at, started_at)
+        await _write_pg_complete(job_id, video_url, completed_at, started_at,
+                                prompt=eff_prompt, audio_description=eff_audio)
         await _deduct_credits(job)
 
         from api.auth import increment_usage

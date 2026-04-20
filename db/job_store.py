@@ -29,7 +29,9 @@ CREATE TABLE IF NOT EXISTS jobs (
     created_at      DOUBLE PRECISION NOT NULL,
     started_at      DOUBLE PRECISION,
     completed_at    DOUBLE PRECISION,
-    callback_url    TEXT NOT NULL DEFAULT ''
+    callback_url    TEXT NOT NULL DEFAULT '',
+    include_audio   BOOLEAN NOT NULL DEFAULT FALSE,
+    audio_description TEXT NOT NULL DEFAULT ''
 );
 """
 
@@ -53,6 +55,11 @@ ALTER TABLE jobs ADD COLUMN IF NOT EXISTS credits_charged NUMERIC(12,4) DEFAULT 
 
 ADD_RAW_KEY_SQL = """
 ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS raw_key TEXT DEFAULT '';
+"""
+
+ADD_AUDIO_COLS_SQL = """
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS include_audio BOOLEAN DEFAULT FALSE;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS audio_description TEXT DEFAULT '';
 """
 
 CREATE_TRAINING_JOBS_SQL = """
@@ -84,6 +91,7 @@ async def get_pool() -> asyncpg.Pool:
             await conn.execute(CREATE_API_KEYS_SQL)
             await conn.execute(ADD_CREDITS_CHARGED_SQL)
             await conn.execute(ADD_RAW_KEY_SQL)
+            await conn.execute(ADD_AUDIO_COLS_SQL)
             await conn.execute(CREATE_TRAINING_JOBS_SQL)
         logger.info("[DB] PostgreSQL pool ready")
     return _pool
@@ -106,8 +114,8 @@ async def save_job(job: dict):
             """
             INSERT INTO jobs
                 (job_id, api_key_hash, status, position, prompt, duration, seed,
-                 created_at, callback_url)
-            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+                 created_at, callback_url, include_audio, audio_description)
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
             ON CONFLICT (job_id) DO NOTHING
             """,
             job["job_id"],
@@ -119,10 +127,13 @@ async def save_job(job: dict):
             int(job.get("seed", 0)),
             float(job["created_at"]),
             job.get("callback_url", ""),
+            bool(job.get("include_audio", False)),
+            job.get("audio_description", ""),
         )
 
 
-async def complete_job(job_id: str, video_url: str, completed_at: float, started_at: float):
+async def complete_job(job_id: str, video_url: str, completed_at: float, started_at: float,
+                       prompt: str = "", audio_description: str = ""):
     """Mark job as completed with R2 video URL (called by worker)."""
     pool = await get_pool()
     async with pool.acquire() as conn:
@@ -130,10 +141,12 @@ async def complete_job(job_id: str, video_url: str, completed_at: float, started
             """
             UPDATE jobs
             SET status = 'completed', video_url = $2,
-                started_at = $3, completed_at = $4
+                started_at = $3, completed_at = $4,
+                prompt = CASE WHEN $5 != '' THEN $5 ELSE prompt END,
+                audio_description = CASE WHEN $6 != '' THEN $6 ELSE audio_description END
             WHERE job_id = $1
             """,
-            job_id, video_url, started_at, completed_at,
+            job_id, video_url, started_at, completed_at, prompt, audio_description,
         )
 
 
