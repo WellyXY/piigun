@@ -137,8 +137,10 @@ class InferenceEngine:
             "num_frames": num_frames,
             "seed": seed,
             "enhance": True,
+            # enhance_prompt disabled — Gemma rewrite exceeds 1024 token limit
+            # "enhance_prompt": include_audio,
         }
-        # Audio is now inline in the prompt — no separate audio_description needed
+        # Audio is now inline in the prompt — Gemma enhance_prompt handles speech generation
         if nsfw_weight is not None:
             payload["nsfw_weight"] = nsfw_weight
         if motion_weight is not None:
