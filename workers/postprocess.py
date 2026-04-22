@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 def run_postprocess(
     input_path: str,
     output_path: str,
-    target_fps: int = 30,
+    target_fps: int = 25,
     upscale_factor: int = 2,
     no_interpolate: bool = False,
     no_upscale: bool = False,
