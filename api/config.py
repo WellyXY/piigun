@@ -55,12 +55,12 @@ class Settings:
     UPSCALE_FACTOR: int = 2
     TARGET_FPS: int = 25                    # LTX 2.3 native
     OUTPUT_FPS: int = 25                    # LTX 2.3 native (not 30, legacy from wan2.2)
-    OUTPUT_RESOLUTION: str = "1024x1536"    # 512x768 raw × lanczos 2x = 1024x1536 enhanced
+    OUTPUT_RESOLUTION: str = "1280x1920"    # 640x960 raw × lanczos 2x = 1280x1920 enhanced
 
     # ── Video defaults ──
     DEFAULT_NUM_FRAMES: int = 249           # 10s @ 25fps (8n+1, legacy 161 was wan2.2-era)
-    DEFAULT_HEIGHT: int = 768
-    DEFAULT_WIDTH: int = 512
+    DEFAULT_HEIGHT: int = 960               # raised 2026-04-22 (was 768); Stage 1 = 320×480
+    DEFAULT_WIDTH: int = 640                # raised 2026-04-22 (was 512)
     DEFAULT_FPS: int = 25                   # LTX 2.3 native (legacy 16 was wan2.2-era)
 
 

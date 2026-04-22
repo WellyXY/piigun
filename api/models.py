@@ -64,7 +64,7 @@ class GenerateResponse(BaseModel):
 class JobMetadata(BaseModel):
     position: str
     duration: int
-    resolution: str = "1024x1536"  # LTX 2.3 default after spatial x2 + lanczos 2x
+    resolution: str = "1280x1920"  # 640x960 default target × lanczos 2x
     fps: int = 25                  # LTX 2.3 native frame rate
     prompt: str = ""
     include_audio: bool = False
